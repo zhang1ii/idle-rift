@@ -14,7 +14,9 @@
 
 ### Agent Sprite Forge
 
-候选像素资产管线，用于角色、怪物、特效和 Sprite Sheet 原型。生成资产必须经过人工挑选、统一调色、透明边缘检查和帧动画验证。
+已接入 `generate2dsprite`，用于角色、怪物、特效、装备图标和 Sprite Sheet 原型。当前锁定上游提交 `64fd0b57d3f2ae117ef0a95e4c2decc25b4c9dd2`，不会自动跟随 `main`。项目资产合同和审核流程见 `docs/ASSET_PIPELINE.md`。
+
+`generate2dmap` 和 `video2dsprite` 暂未接入：首版是固定横版战斗场景，不需要复杂地图；视频流程也不是 Codex 原生能力。
 
 ## 使用边界
 
@@ -28,5 +30,5 @@
 
 1. 完成纯 Godot 的最小战斗和掉落闭环。
 2. 接入 Godot 编辑器 Agent，提高场景与测试迭代效率。
-3. 建立可重复的像素资产生成和验证流程。
+3. 使用已接入的 `generate2dsprite` 完成首批英雄、怪物和战斗特效，并验证项目资产合同。
 4. 在玩法稳定后再增加多 Agent 的设计、数值和 QA 流程。

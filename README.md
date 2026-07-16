@@ -41,6 +41,7 @@ godot --headless --path . --script res://tests/test_combat.gd
 - [DESIGN.md](DESIGN.md)：视觉与交互原则
 - [docs/GDD.md](docs/GDD.md)：首版玩法设计
 - [docs/AI_TOOLCHAIN.md](docs/AI_TOOLCHAIN.md)：AI Agent 工具链计划
+- [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md)：像素资产规格、生成和审核流程
 
 ## 第三方资产
 

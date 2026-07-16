@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "pipeline": {
+    "skill": "generate2dsprite",
+    "source_repository": "0x0funky/agent-sprite-forge",
+    "source_commit": "64fd0b57d3f2ae117ef0a95e4c2decc25b4c9dd2"
+  },
+  "runtime_contract": {
+    "logical_viewport": [640, 360],
+    "view": "side",
+    "anchor": "bottom_center",
+    "filter": "nearest",
+    "default_facing": "right"
+  },
+  "assets": []
+}
