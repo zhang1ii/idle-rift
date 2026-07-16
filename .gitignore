@@ -1,0 +1,18 @@
+# Godot 4 generated files
+.godot/
+
+# Exported builds
+builds/
+exports/
+
+# Local environment and editor files
+.DS_Store
+.idea/
+.vscode/
+*.tmp
+*.log
+
+# Local AI tool configuration and generated scratch files
+.env
+.env.*
+work/
