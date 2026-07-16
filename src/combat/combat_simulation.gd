@@ -8,6 +8,7 @@ signal equipment_changed
 
 const Equipment = preload("res://src/equipment/equipment_item.gd")
 const Generator = preload("res://src/equipment/equipment_generator.gd")
+const Classes = preload("res://src/data/class_definition.gd")
 
 const BASE_HERO_DAMAGE := 8.0
 const BASE_HERO_HEALTH := 100.0
@@ -20,8 +21,12 @@ var inventory: Array[EquipmentItem] = []
 var equipped: Dictionary = {}
 
 var elapsed_time := 0.0
+var selected_class_id: StringName = &"iron_vow"
 var kill_count := 0
 var gold := 0
+var class_resource := 0.0
+var blocked_attacks := 0
+var counter_attacks := 0
 var paused := false
 var speed_multiplier := 1.0
 
@@ -90,6 +95,16 @@ func hero_critical_chance() -> float:
 	return clampf(0.05 + _equipped_stat(&"critical_chance") / 100.0, 0.0, 0.75)
 
 
+func hero_block_chance() -> float:
+	if selected_class_id != &"iron_vow":
+		return 0.0
+	return clampf(0.22 + _equipped_stat(&"block_chance") / 100.0, 0.0, 0.75)
+
+
+func class_definition() -> Dictionary:
+	return Classes.get_definition(selected_class_id)
+
+
 func current_rift_level() -> int:
 	return 1 + floori(float(kill_count) / 5.0)
 
@@ -124,6 +139,11 @@ func equipped_item(slot: EquipmentItem.Slot) -> EquipmentItem:
 
 func _hero_attack() -> void:
 	var damage := hero_damage()
+	var shield_slam := selected_class_id == &"iron_vow" and class_resource >= 100.0
+	if shield_slam:
+		damage *= 1.8
+		class_resource = 0.0
+		battle_event.emit("守势蓄满，发动裂盾猛击。")
 	var critical := rng.randf() <= hero_critical_chance()
 	if critical:
 		damage *= 1.75
@@ -135,6 +155,17 @@ func _hero_attack() -> void:
 func _enemy_attack() -> void:
 	var raw_damage := 4.5 + float(enemy_level) * 1.15
 	var received := maxf(1.0, raw_damage - hero_armor() * 0.35)
+	if rng.randf() <= hero_block_chance():
+		received *= 0.25
+		class_resource = minf(100.0, class_resource + 22.0)
+		blocked_attacks += 1
+		counter_attacks += 1
+		var counter_multiplier := 0.65 + _equipped_stat(&"counter_damage") / 100.0
+		enemy_health = maxf(0.0, enemy_health - hero_damage() * counter_multiplier)
+		battle_event.emit("格挡攻击并立即反击。")
+		if enemy_health <= 0.0:
+			_on_enemy_defeated(false)
+			return
 	hero_health = maxf(0.0, hero_health - received)
 	if hero_health <= 0.0:
 		battle_event.emit("英雄倒下，2 秒后重新投入战斗。")

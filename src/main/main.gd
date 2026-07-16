@@ -2,10 +2,19 @@ extends Control
 
 const Combat = preload("res://src/combat/combat_simulation.gd")
 const Equipment = preload("res://src/equipment/equipment_item.gd")
+const IRON_VOW_IDLE_FRAMES: Array[Texture2D] = [
+	preload("res://assets/sprites/characters/iron_vow/idle/frame_01.png"),
+	preload("res://assets/sprites/characters/iron_vow/idle/frame_02.png"),
+	preload("res://assets/sprites/characters/iron_vow/idle/frame_03.png"),
+	preload("res://assets/sprites/characters/iron_vow/idle/frame_04.png"),
+]
 
 @onready var rift_label: Label = %RiftLabel
 @onready var gold_label: Label = %GoldLabel
 @onready var hero_health: ProgressBar = %HeroHealth
+@onready var class_name_label: Label = %ClassName
+@onready var class_resource: ProgressBar = %ClassResource
+@onready var hero_sprite: TextureRect = %HeroSprite
 @onready var hero_stats: Label = %HeroStats
 @onready var enemy_name: Label = %EnemyName
 @onready var enemy_health: ProgressBar = %EnemyHealth
@@ -21,6 +30,8 @@ const Equipment = preload("res://src/equipment/equipment_item.gd")
 
 var simulation: CombatSimulation
 var log_lines: Array[String] = []
+var idle_frame_index := 0
+var idle_frame_elapsed := 0.0
 
 
 func _ready() -> void:
@@ -41,7 +52,19 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	simulation.tick(delta)
+	_update_hero_animation(delta)
 	_refresh_runtime_ui()
+
+
+func _update_hero_animation(delta: float) -> void:
+	if simulation.paused:
+		return
+	idle_frame_elapsed += delta * simulation.speed_multiplier
+	if idle_frame_elapsed < 0.22:
+		return
+	idle_frame_elapsed = fmod(idle_frame_elapsed, 0.22)
+	idle_frame_index = (idle_frame_index + 1) % IRON_VOW_IDLE_FRAMES.size()
+	hero_sprite.texture = IRON_VOW_IDLE_FRAMES[idle_frame_index]
 
 
 func _refresh_runtime_ui() -> void:
@@ -50,11 +73,14 @@ func _refresh_runtime_ui() -> void:
 	hero_health.max_value = simulation.hero_max_health()
 	hero_health.value = simulation.hero_health
 	(hero_health.get_node("Value") as Label).text = "%d / %d" % [roundi(simulation.hero_health), roundi(simulation.hero_max_health())]
-	hero_stats.text = "伤害 %.0f  ·  攻速 %.2f\n护甲 %.0f  ·  暴击 %d%%" % [
+	class_name_label.text = simulation.class_definition()["name"]
+	class_resource.value = simulation.class_resource
+	(class_resource.get_node("Value") as Label).text = "守势 %d / 100" % roundi(simulation.class_resource)
+	hero_stats.text = "伤害 %.0f  ·  攻速 %.2f\n护甲 %.0f  ·  格挡 %d%%" % [
 		simulation.hero_damage(),
 		simulation.hero_attack_speed(),
 		simulation.hero_armor(),
-		roundi(simulation.hero_critical_chance() * 100.0),
+		roundi(simulation.hero_block_chance() * 100.0),
 	]
 	enemy_name.text = simulation.enemy_name
 	enemy_health.max_value = simulation.enemy_max_health

@@ -1,7 +1,8 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource path="res://src/main/main.gd" type="Script" id="1_main"]
 [ext_resource path="res://assets/fonts/NotoSansSC-IdleRift.ttf" type="FontFile" id="2_font"]
+[ext_resource path="res://assets/sprites/characters/iron_vow/idle/frame_01.png" type="Texture2D" id="3_hero_idle"]
 
 [sub_resource type="Theme" id="ThemeInterface"]
 default_font = ExtResource("2_font")
@@ -44,6 +45,13 @@ corner_radius_bottom_left = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleHeroBar"]
 bg_color = Color(0.2, 0.58, 0.48, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleResourceBar"]
+bg_color = Color(0.28, 0.56, 0.65, 1)
 corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
@@ -211,25 +219,35 @@ theme_override_styles/panel = SubResource("StyleHero")
 
 [node name="HeroMargin" type="MarginContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
 
 [node name="HeroVBox" type="VBoxContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
-[node name="Role" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+[node name="ClassName" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.7, 0.82, 1)
 theme_override_font_sizes/font_size = 10
-text = "远征者"
+text = "铁誓卫"
 
 [node name="Name" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "无名守望者"
+
+[node name="HeroSprite" type="TextureRect" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+texture_filter = 1
+texture = ExtResource("3_hero_idle")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="HeroHealth" type="ProgressBar" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
 unique_name_in_owner = true
@@ -248,6 +266,27 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 9
 text = "100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClassResource" type="ProgressBar" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBarBackground")
+theme_override_styles/fill = SubResource("StyleResourceBar")
+
+[node name="Value" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox/ClassResource"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 8
+text = "守势 0 / 100"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -335,7 +374,7 @@ text = "等级 1 · 已击杀 0"
 
 [node name="BattleLog" type="RichTextLabel" parent="Margin/Root/MainRow/BattleColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 70)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_override_colors/default_color = Color(0.56, 0.59, 0.64, 1)
 theme_override_font_sizes/normal_font_size = 9

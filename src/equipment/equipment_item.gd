@@ -38,6 +38,8 @@ func power_score() -> int:
 		+ total_stat(&"armor") * 1.4
 		+ total_stat(&"attack_speed") * 1.8
 		+ total_stat(&"critical_chance") * 2.2
+		+ total_stat(&"block_chance") * 2.0
+		+ total_stat(&"counter_damage") * 1.5
 	)
 
 
@@ -103,10 +105,14 @@ static func stat_label(stat_name: StringName) -> String:
 			return "攻速"
 		&"critical_chance":
 			return "暴击"
+		&"block_chance":
+			return "格挡"
+		&"counter_damage":
+			return "反击伤害"
 	return String(stat_name)
 
 
 func _format_stat(stat_name: StringName, value: float) -> String:
-	if stat_name in [&"attack_speed", &"critical_chance"]:
+	if stat_name in [&"attack_speed", &"critical_chance", &"block_chance", &"counter_damage"]:
 		return "+%d%% %s" % [roundi(value), stat_label(stat_name)]
 	return "+%d %s" % [roundi(value), stat_label(stat_name)]

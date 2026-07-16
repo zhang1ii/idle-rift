@@ -28,6 +28,8 @@ func _test_idle_combat(failures: Array[String]) -> void:
 	_expect(not simulation.inventory.is_empty(), "Defeated enemies should produce loot.", failures)
 	_expect(simulation.gold > 0, "Defeated enemies should produce gold.", failures)
 	_expect(simulation.current_rift_level() > 1, "Kills should advance the rift level.", failures)
+	_expect(simulation.blocked_attacks > 0, "Iron Vow should block incoming attacks.", failures)
+	_expect(simulation.counter_attacks == simulation.blocked_attacks, "Every Iron Vow block should counterattack.", failures)
 
 
 func _test_equipment_generation(failures: Array[String]) -> void:

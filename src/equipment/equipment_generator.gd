@@ -9,6 +9,8 @@ const AFFIX_POOL: Array[Dictionary] = [
 	{"stat": &"armor", "name": "坚韧", "minimum": 2.0, "maximum": 7.0},
 	{"stat": &"attack_speed", "name": "迅捷", "minimum": 3.0, "maximum": 9.0},
 	{"stat": &"critical_chance", "name": "锐利", "minimum": 2.0, "maximum": 6.0},
+	{"stat": &"block_chance", "name": "招架", "minimum": 3.0, "maximum": 8.0},
+	{"stat": &"counter_damage", "name": "报偿", "minimum": 8.0, "maximum": 18.0},
 ]
 
 var rng := RandomNumberGenerator.new()
