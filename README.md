@@ -45,6 +45,7 @@ godot --headless --path . --script res://tests/test_combat.gd
 - [docs/CLASSES.md](docs/CLASSES.md)：职业资源、战斗风味与装备方向
 - [docs/AI_TOOLCHAIN.md](docs/AI_TOOLCHAIN.md)：AI Agent 工具链计划
 - [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md)：像素资产规格、生成和审核流程
+- [docs/DATA_ARCHITECTURE.md](docs/DATA_ARCHITECTURE.md)：玩法配置、运行状态、规则和 UI 的分层约定
 
 ## 第三方资产
 

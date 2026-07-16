@@ -1,0 +1,31 @@
+{
+  "hero": {
+    "base_damage": 8.0,
+    "base_health": 100.0,
+    "base_critical_chance": 0.05,
+    "critical_damage_multiplier": 1.75,
+    "minimum_attack_speed": 0.4,
+    "maximum_attack_speed": 3.0
+  },
+  "rift": {
+    "kills_per_level": 5,
+    "enemy_rotation_kills": 2,
+    "enemy_health_base": 25.0,
+    "enemy_health_per_level": 0.24,
+    "respawn_delay": 0.45,
+    "hero_defeat_delay": 2.0
+  },
+  "enemy_attack": {
+    "damage_base": 4.5,
+    "damage_per_level": 1.15,
+    "armor_reduction_factor": 0.35,
+    "interval_base": 1.35,
+    "interval_per_level": 0.025,
+    "minimum_interval": 0.65
+  },
+  "rewards": {
+    "drop_chance": 0.72,
+    "gold_base": 2,
+    "gold_per_enemy_level": 1
+  }
+}

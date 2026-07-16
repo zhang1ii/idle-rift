@@ -1,6 +1,10 @@
 class_name EquipmentItem
 extends RefCounted
 
+const Repository = preload("res://src/data/game_data_repository.gd")
+
+static var _repository := Repository.new() as GameDataRepository
+
 enum Slot {
 	WEAPON,
 	HELM,
@@ -57,40 +61,15 @@ func short_description() -> String:
 
 
 static func slot_name(value: Slot) -> String:
-	match value:
-		Slot.WEAPON:
-			return "裂隙武器"
-		Slot.HELM:
-			return "守望头盔"
-		Slot.ARMOR:
-			return "远征胸甲"
-		Slot.RING:
-			return "余烬戒指"
-		Slot.AMULET:
-			return "回响护符"
-	return "未知装备"
+	return String(_repository.slot_definition(value)["name"])
 
 
 static func rarity_prefix(value: Rarity) -> String:
-	match value:
-		Rarity.COMMON:
-			return "朴素的"
-		Rarity.MAGIC:
-			return "魔能"
-		Rarity.RARE:
-			return "辉耀"
-	return "未知"
+	return String(_repository.rarity_definition(value)["prefix"])
 
 
 static func rarity_color(value: Rarity) -> Color:
-	match value:
-		Rarity.COMMON:
-			return Color("c6c9ce")
-		Rarity.MAGIC:
-			return Color("69a7ff")
-		Rarity.RARE:
-			return Color("ffd36a")
-	return Color.WHITE
+	return Color(String(_repository.rarity_definition(value)["color"]))
 
 
 static func stat_label(stat_name: StringName) -> String:

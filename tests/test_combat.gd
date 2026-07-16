@@ -2,12 +2,14 @@ extends SceneTree
 
 const Combat = preload("res://src/combat/combat_simulation.gd")
 const Equipment = preload("res://src/equipment/equipment_item.gd")
+const Repository = preload("res://src/data/game_data_repository.gd")
 
 
 func _init() -> void:
 	var failures: Array[String] = []
 	_test_idle_combat(failures)
 	_test_equipment_generation(failures)
+	_test_game_data_and_state_separation(failures)
 
 	if failures.is_empty():
 		print("PASS: combat and equipment tests")
@@ -51,6 +53,18 @@ func _test_equipment_generation(failures: Array[String]) -> void:
 	_expect(equipped, "Inventory equipment should be equippable.", failures)
 	_expect(simulation.hero_damage() > damage_before, "Weapon should immediately increase hero damage.", failures)
 	_expect(simulation.equipped_item(Equipment.Slot.WEAPON) == weapon, "Equipped slot should contain the selected item.", failures)
+
+
+func _test_game_data_and_state_separation(failures: Array[String]) -> void:
+	var repository := Repository.new() as GameDataRepository
+	var simulation := Combat.new(3107, repository) as CombatSimulation
+	_expect(repository.enemies().size() == 4, "Enemy definitions should load from gameplay data.", failures)
+	_expect(simulation.class_definition()["name"] == "铁誓卫", "Class definitions should load through the repository.", failures)
+	_expect(is_equal_approx(simulation.hero_damage(), float(repository.combat()["hero"]["base_damage"])), "Combat should consume configured hero damage.", failures)
+	simulation.tick(1.0)
+	var snapshot := simulation.state.snapshot()
+	_expect(snapshot["schema_version"] == 1, "Runtime state should expose a versioned save snapshot.", failures)
+	_expect(snapshot["elapsed_time"] > 0.0, "Runtime state should be independent and serializable.", failures)
 
 
 func _expect(condition: bool, message: String, failures: Array[String]) -> void:

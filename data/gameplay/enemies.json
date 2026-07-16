@@ -1,0 +1,8 @@
+{
+  "enemies": [
+    {"id": "corrupted_rat", "name": "腐化鼠人"},
+    {"id": "crypt_wraith", "name": "墓穴游魂"},
+    {"id": "rift_hound", "name": "裂隙猎犬"},
+    {"id": "ash_guard", "name": "灰烬守卫"}
+  ]
+}

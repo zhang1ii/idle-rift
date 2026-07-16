@@ -8,79 +8,100 @@ signal equipment_changed
 
 const Equipment = preload("res://src/equipment/equipment_item.gd")
 const Generator = preload("res://src/equipment/equipment_generator.gd")
-const Classes = preload("res://src/data/class_definition.gd")
-
-const BASE_HERO_DAMAGE := 8.0
-const BASE_HERO_HEALTH := 100.0
-const DROP_CHANCE := 0.72
-const ENEMY_NAMES: Array[String] = ["腐化鼠人", "墓穴游魂", "裂隙猎犬", "灰烬守卫"]
+const Repository = preload("res://src/data/game_data_repository.gd")
+const State = preload("res://src/combat/combat_state.gd")
 
 var rng := RandomNumberGenerator.new()
 var generator: EquipmentGenerator
-var inventory: Array[EquipmentItem] = []
-var equipped: Dictionary = {}
+var game_data: GameDataRepository
+var state: CombatState
 
-var elapsed_time := 0.0
-var selected_class_id: StringName = &"iron_vow"
-var kill_count := 0
-var gold := 0
-var class_resource := 0.0
-var blocked_attacks := 0
-var counter_attacks := 0
-var paused := false
-var speed_multiplier := 1.0
+var inventory: Array[EquipmentItem]:
+	get: return state.inventory
+var equipped: Dictionary:
+	get: return state.equipped
+var elapsed_time: float:
+	get: return state.elapsed_time
+var selected_class_id: StringName:
+	get: return state.selected_class_id
+	set(value): state.selected_class_id = value
+var kill_count: int:
+	get: return state.kill_count
+var gold: int:
+	get: return state.gold
+var class_resource: float:
+	get: return state.class_resource
+var blocked_attacks: int:
+	get: return state.blocked_attacks
+var counter_attacks: int:
+	get: return state.counter_attacks
+var paused: bool:
+	get: return state.paused
+	set(value): state.paused = value
+var speed_multiplier: float:
+	get: return state.speed_multiplier
+	set(value): state.speed_multiplier = value
+var hero_health: float:
+	get: return state.hero_health
+var enemy_name: String:
+	get: return state.enemy_name
+var enemy_level: int:
+	get: return state.enemy_level
+var enemy_health: float:
+	get: return state.enemy_health
+var enemy_max_health: float:
+	get: return state.enemy_max_health
 
-var hero_health := BASE_HERO_HEALTH
-var hero_attack_cooldown := 0.0
-var enemy_attack_cooldown := 1.0
-var respawn_delay := 0.0
 
-var enemy_name := ""
-var enemy_level := 1
-var enemy_health := 1.0
-var enemy_max_health := 1.0
-
-
-func _init(seed_value: int = 0) -> void:
+func _init(seed_value: int = 0, repository: GameDataRepository = null, initial_state: CombatState = null) -> void:
+	game_data = repository if repository != null else Repository.new()
+	state = initial_state if initial_state != null else State.new()
 	if seed_value == 0:
 		rng.randomize()
-		generator = Generator.new()
+		generator = Generator.new(0, game_data)
 	else:
 		rng.seed = seed_value
-		generator = Generator.new(seed_value + 1)
+		generator = Generator.new(seed_value + 1, game_data)
+	if initial_state == null:
+		state.selected_class_id = StringName(game_data.classes()["default_class_id"])
+		state.hero_health = hero_max_health()
 	_spawn_enemy()
 
 
 func tick(delta: float) -> void:
-	if paused:
+	if state.paused:
 		return
 
-	var step := delta * speed_multiplier
-	elapsed_time += step
-	if respawn_delay > 0.0:
-		respawn_delay -= step
-		if respawn_delay <= 0.0:
+	var step := delta * state.speed_multiplier
+	state.elapsed_time += step
+	if state.respawn_delay > 0.0:
+		state.respawn_delay -= step
+		if state.respawn_delay <= 0.0:
 			_spawn_enemy()
 		return
 
-	hero_attack_cooldown -= step
-	enemy_attack_cooldown -= step
+	state.hero_attack_cooldown -= step
+	state.enemy_attack_cooldown -= step
 
-	if hero_attack_cooldown <= 0.0:
+	if state.hero_attack_cooldown <= 0.0:
 		_hero_attack()
-		hero_attack_cooldown += 1.0 / hero_attack_speed()
+		state.hero_attack_cooldown += 1.0 / hero_attack_speed()
 
-	if enemy_health > 0.0 and enemy_attack_cooldown <= 0.0:
+	if state.enemy_health > 0.0 and state.enemy_attack_cooldown <= 0.0:
 		_enemy_attack()
-		enemy_attack_cooldown += maxf(0.65, 1.35 - float(enemy_level) * 0.025)
+		var attack_data: Dictionary = game_data.combat()["enemy_attack"]
+		state.enemy_attack_cooldown += maxf(
+			float(attack_data["minimum_interval"]),
+			float(attack_data["interval_base"]) - float(state.enemy_level) * float(attack_data["interval_per_level"])
+		)
 
 
 func hero_damage() -> float:
-	return BASE_HERO_DAMAGE + _equipped_stat(&"attack")
+	return float(game_data.combat()["hero"]["base_damage"]) + _equipped_stat(&"attack")
 
 
 func hero_max_health() -> float:
-	return BASE_HERO_HEALTH + _equipped_stat(&"health")
+	return float(game_data.combat()["hero"]["base_health"]) + _equipped_stat(&"health")
 
 
 func hero_armor() -> float:
@@ -88,45 +109,51 @@ func hero_armor() -> float:
 
 
 func hero_attack_speed() -> float:
-	return clampf(1.0 + _equipped_stat(&"attack_speed") / 100.0, 0.4, 3.0)
+	var hero_data: Dictionary = game_data.combat()["hero"]
+	return clampf(
+		1.0 + _equipped_stat(&"attack_speed") / 100.0,
+		float(hero_data["minimum_attack_speed"]),
+		float(hero_data["maximum_attack_speed"])
+	)
 
 
 func hero_critical_chance() -> float:
-	return clampf(0.05 + _equipped_stat(&"critical_chance") / 100.0, 0.0, 0.75)
+	return clampf(float(game_data.combat()["hero"]["base_critical_chance"]) + _equipped_stat(&"critical_chance") / 100.0, 0.0, 0.75)
 
 
 func hero_block_chance() -> float:
-	if selected_class_id != &"iron_vow":
+	if state.selected_class_id != &"iron_vow":
 		return 0.0
-	return clampf(0.22 + _equipped_stat(&"block_chance") / 100.0, 0.0, 0.75)
+	var mechanics: Dictionary = class_definition()["mechanics"]
+	return clampf(float(mechanics["base_block_chance"]) + _equipped_stat(&"block_chance") / 100.0, 0.0, 0.75)
 
 
 func class_definition() -> Dictionary:
-	return Classes.get_definition(selected_class_id)
+	return game_data.class_definition(state.selected_class_id)
 
 
 func current_rift_level() -> int:
-	return 1 + floori(float(kill_count) / 5.0)
+	return 1 + floori(float(state.kill_count) / float(game_data.combat()["rift"]["kills_per_level"]))
 
 
 func kills_per_minute() -> float:
-	if elapsed_time <= 0.0:
+	if state.elapsed_time <= 0.0:
 		return 0.0
-	return float(kill_count) / elapsed_time * 60.0
+	return float(state.kill_count) / state.elapsed_time * 60.0
 
 
 func equip_item(item: EquipmentItem) -> bool:
-	var inventory_index := inventory.find(item)
+	var inventory_index := state.inventory.find(item)
 	if inventory_index < 0:
 		return false
 
 	var previous_max_health := hero_max_health()
-	inventory.remove_at(inventory_index)
-	if equipped.has(item.slot):
-		inventory.append(equipped[item.slot])
-	equipped[item.slot] = item
+	state.inventory.remove_at(inventory_index)
+	if state.equipped.has(item.slot):
+		state.inventory.append(state.equipped[item.slot])
+	state.equipped[item.slot] = item
 	var health_gain := hero_max_health() - previous_max_health
-	hero_health = clampf(hero_health + maxf(0.0, health_gain), 1.0, hero_max_health())
+	state.hero_health = clampf(state.hero_health + maxf(0.0, health_gain), 1.0, hero_max_health())
 	battle_event.emit("装备 %s，战斗属性已更新。" % item.display_name())
 	inventory_changed.emit()
 	equipment_changed.emit()
@@ -134,73 +161,82 @@ func equip_item(item: EquipmentItem) -> bool:
 
 
 func equipped_item(slot: EquipmentItem.Slot) -> EquipmentItem:
-	return equipped.get(slot) as EquipmentItem
+	return state.equipped.get(slot) as EquipmentItem
 
 
 func _hero_attack() -> void:
 	var damage := hero_damage()
-	var shield_slam := selected_class_id == &"iron_vow" and class_resource >= 100.0
+	var mechanics: Dictionary = class_definition()["mechanics"]
+	var resource_max := float(mechanics.get("resource_max", 100.0))
+	var shield_slam := state.selected_class_id == &"iron_vow" and state.class_resource >= resource_max
 	if shield_slam:
-		damage *= 1.8
-		class_resource = 0.0
+		damage *= float(mechanics["shield_slam_multiplier"])
+		state.class_resource = 0.0
 		battle_event.emit("守势蓄满，发动裂盾猛击。")
 	var critical := rng.randf() <= hero_critical_chance()
 	if critical:
-		damage *= 1.75
-	enemy_health = maxf(0.0, enemy_health - damage)
-	if enemy_health <= 0.0:
+		damage *= float(game_data.combat()["hero"]["critical_damage_multiplier"])
+	state.enemy_health = maxf(0.0, state.enemy_health - damage)
+	if state.enemy_health <= 0.0:
 		_on_enemy_defeated(critical)
 
 
 func _enemy_attack() -> void:
-	var raw_damage := 4.5 + float(enemy_level) * 1.15
-	var received := maxf(1.0, raw_damage - hero_armor() * 0.35)
+	var attack_data: Dictionary = game_data.combat()["enemy_attack"]
+	var raw_damage := float(attack_data["damage_base"]) + float(state.enemy_level) * float(attack_data["damage_per_level"])
+	var received := maxf(1.0, raw_damage - hero_armor() * float(attack_data["armor_reduction_factor"]))
 	if rng.randf() <= hero_block_chance():
-		received *= 0.25
-		class_resource = minf(100.0, class_resource + 22.0)
-		blocked_attacks += 1
-		counter_attacks += 1
-		var counter_multiplier := 0.65 + _equipped_stat(&"counter_damage") / 100.0
-		enemy_health = maxf(0.0, enemy_health - hero_damage() * counter_multiplier)
+		var mechanics: Dictionary = class_definition()["mechanics"]
+		received *= float(mechanics["blocked_damage_multiplier"])
+		state.class_resource = minf(float(mechanics["resource_max"]), state.class_resource + float(mechanics["resource_per_block"]))
+		state.blocked_attacks += 1
+		state.counter_attacks += 1
+		var counter_multiplier := float(mechanics["counter_damage_multiplier"]) + _equipped_stat(&"counter_damage") / 100.0
+		state.enemy_health = maxf(0.0, state.enemy_health - hero_damage() * counter_multiplier)
 		battle_event.emit("格挡攻击并立即反击。")
-		if enemy_health <= 0.0:
+		if state.enemy_health <= 0.0:
 			_on_enemy_defeated(false)
 			return
-	hero_health = maxf(0.0, hero_health - received)
-	if hero_health <= 0.0:
+	state.hero_health = maxf(0.0, state.hero_health - received)
+	if state.hero_health <= 0.0:
 		battle_event.emit("英雄倒下，2 秒后重新投入战斗。")
-		hero_health = hero_max_health()
-		enemy_health = enemy_max_health
-		respawn_delay = 2.0
+		state.hero_health = hero_max_health()
+		state.enemy_health = state.enemy_max_health
+		state.respawn_delay = float(game_data.combat()["rift"]["hero_defeat_delay"])
 
 
 func _on_enemy_defeated(was_critical: bool) -> void:
-	kill_count += 1
-	gold += 2 + enemy_level
+	state.kill_count += 1
+	var rewards: Dictionary = game_data.combat()["rewards"]
+	state.gold += int(rewards["gold_base"]) + state.enemy_level * int(rewards["gold_per_enemy_level"])
 	var detail := " 暴击终结。" if was_critical else ""
-	battle_event.emit("击败 %s。%s" % [enemy_name, detail])
+	battle_event.emit("击败 %s。%s" % [state.enemy_name, detail])
 
-	if inventory.is_empty() or rng.randf() <= DROP_CHANCE:
+	if state.inventory.is_empty() or rng.randf() <= float(rewards["drop_chance"]):
 		var item := generator.generate(current_rift_level())
-		inventory.append(item)
+		state.inventory.append(item)
 		equipment_dropped.emit(item)
 		inventory_changed.emit()
 
-	respawn_delay = 0.45
+	state.respawn_delay = float(game_data.combat()["rift"]["respawn_delay"])
 
 
 func _spawn_enemy() -> void:
-	enemy_level = current_rift_level()
-	var enemy_index := floori(float(kill_count) / 2.0) % ENEMY_NAMES.size()
-	enemy_name = ENEMY_NAMES[enemy_index]
-	enemy_max_health = roundf(25.0 * (1.0 + float(enemy_level) * 0.24))
-	enemy_health = enemy_max_health
-	hero_attack_cooldown = minf(hero_attack_cooldown, 0.18)
-	enemy_attack_cooldown = 1.0
+	var rift_data: Dictionary = game_data.combat()["rift"]
+	state.enemy_level = current_rift_level()
+	var enemies := game_data.enemies()
+	var enemy_index := floori(float(state.kill_count) / float(rift_data["enemy_rotation_kills"])) % enemies.size()
+	var enemy_definition: Dictionary = enemies[enemy_index]
+	state.enemy_id = enemy_definition["id"]
+	state.enemy_name = enemy_definition["name"]
+	state.enemy_max_health = roundf(float(rift_data["enemy_health_base"]) * (1.0 + float(state.enemy_level) * float(rift_data["enemy_health_per_level"])))
+	state.enemy_health = state.enemy_max_health
+	state.hero_attack_cooldown = minf(state.hero_attack_cooldown, 0.18)
+	state.enemy_attack_cooldown = 1.0
 
 
 func _equipped_stat(stat_name: StringName) -> float:
 	var total := 0.0
-	for item in equipped.values():
+	for item in state.equipped.values():
 		total += (item as EquipmentItem).total_stat(stat_name)
 	return total
