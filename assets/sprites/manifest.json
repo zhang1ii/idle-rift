@@ -6,7 +6,7 @@
     "source_commit": "64fd0b57d3f2ae117ef0a95e4c2decc25b4c9dd2"
   },
   "runtime_contract": {
-    "logical_viewport": [640, 360],
+    "logical_viewport": [960, 540],
     "view": "side",
     "anchor": "bottom_center",
     "filter": "nearest",
@@ -25,6 +25,28 @@
       "frame_pattern": "characters/iron_vow/idle/frame_%02d.png",
       "pipeline_meta": "characters/iron_vow/idle/pipeline-meta.json",
       "prompt": "characters/iron_vow/idle/prompt-used.txt",
+      "status": "approved_prototype"
+    },
+    {
+      "id": "rift_hound_idle",
+      "type": "creature",
+      "action": "idle",
+      "cell_size": [96, 96],
+      "frames": 4,
+      "frame_duration_ms": 220,
+      "frame_pattern": "enemies/rift_hound/idle/idle-%d.png",
+      "pipeline_meta": "enemies/rift_hound/idle/pipeline-meta.json",
+      "prompt": "enemies/rift_hound/idle/prompt-used.txt",
+      "status": "approved_prototype"
+    },
+    {
+      "id": "settlement_loot_icons",
+      "type": "item_icon_set",
+      "cell_size": [80, 80],
+      "frames": 5,
+      "frame_pattern": "items/settlement/sheet-%d.png",
+      "pipeline_meta": "items/settlement/pipeline-meta.json",
+      "prompt": "items/settlement/prompt-used.txt",
       "status": "approved_prototype"
     }
   ]

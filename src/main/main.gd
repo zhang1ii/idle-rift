@@ -8,6 +8,18 @@ const IRON_VOW_IDLE_FRAMES: Array[Texture2D] = [
 	preload("res://assets/sprites/characters/iron_vow/idle/frame_03.png"),
 	preload("res://assets/sprites/characters/iron_vow/idle/frame_04.png"),
 ]
+const RIFT_HOUND_IDLE_FRAMES: Array[Texture2D] = [
+	preload("res://assets/sprites/enemies/rift_hound/idle/idle-1.png"),
+	preload("res://assets/sprites/enemies/rift_hound/idle/idle-2.png"),
+	preload("res://assets/sprites/enemies/rift_hound/idle/idle-3.png"),
+	preload("res://assets/sprites/enemies/rift_hound/idle/idle-4.png"),
+]
+
+enum InterfaceMode {
+	COMPACT,
+	MANAGEMENT,
+	SETTLEMENT,
+}
 
 @onready var rift_label: Label = %RiftLabel
 @onready var gold_label: Label = %GoldLabel
@@ -15,6 +27,7 @@ const IRON_VOW_IDLE_FRAMES: Array[Texture2D] = [
 @onready var class_name_label: Label = %ClassName
 @onready var class_resource: ProgressBar = %ClassResource
 @onready var hero_sprite: TextureRect = %HeroSprite
+@onready var enemy_sprite: TextureRect = %EnemySprite
 @onready var hero_stats: Label = %HeroStats
 @onready var enemy_name: Label = %EnemyName
 @onready var enemy_health: ProgressBar = %EnemyHealth
@@ -27,11 +40,22 @@ const IRON_VOW_IDLE_FRAMES: Array[Texture2D] = [
 @onready var equipped_label: Label = %EquippedLabel
 @onready var pause_button: Button = %PauseButton
 @onready var speed_button: Button = %SpeedButton
+@onready var settlement_shade: ColorRect = %SettlementShade
+@onready var settlement_panel: PanelContainer = %SettlementPanel
+@onready var management_panel: PanelContainer = %ManagementPanel
+@onready var battle_dock: PanelContainer = %BattleDock
+@onready var loot_button: Button = %LootButton
+@onready var manage_button: Button = %ManageButton
+@onready var compact_button: Button = %CompactButton
+@onready var keep_farming_button: Button = %KeepFarmingButton
+@onready var best_drop_button: Button = %BestDropButton
 
 var simulation: CombatSimulation
 var log_lines: Array[String] = []
 var idle_frame_index := 0
 var idle_frame_elapsed := 0.0
+var interface_mode := InterfaceMode.SETTLEMENT
+var expanded_window_size := Vector2i(1280, 720)
 
 
 func _ready() -> void:
@@ -44,6 +68,13 @@ func _ready() -> void:
 	equip_button.pressed.connect(_on_equip_pressed)
 	pause_button.pressed.connect(_on_pause_pressed)
 	speed_button.pressed.connect(_on_speed_pressed)
+	loot_button.pressed.connect(func() -> void: _set_interface_mode(InterfaceMode.SETTLEMENT))
+	manage_button.pressed.connect(func() -> void: _set_interface_mode(InterfaceMode.MANAGEMENT))
+	compact_button.pressed.connect(func() -> void: _set_interface_mode(InterfaceMode.COMPACT))
+	keep_farming_button.pressed.connect(func() -> void: _set_interface_mode(InterfaceMode.COMPACT))
+	best_drop_button.pressed.connect(func() -> void: _set_interface_mode(InterfaceMode.MANAGEMENT))
+	_configure_desktop_window()
+	_set_interface_mode(InterfaceMode.SETTLEMENT)
 	_on_battle_event("远征开始。英雄将自动战斗并收集装备。")
 	_refresh_inventory()
 	_refresh_equipment()
@@ -52,11 +83,11 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	simulation.tick(delta)
-	_update_hero_animation(delta)
+	_update_sprite_animation(delta)
 	_refresh_runtime_ui()
 
 
-func _update_hero_animation(delta: float) -> void:
+func _update_sprite_animation(delta: float) -> void:
 	if simulation.paused:
 		return
 	idle_frame_elapsed += delta * simulation.speed_multiplier
@@ -65,6 +96,64 @@ func _update_hero_animation(delta: float) -> void:
 	idle_frame_elapsed = fmod(idle_frame_elapsed, 0.22)
 	idle_frame_index = (idle_frame_index + 1) % IRON_VOW_IDLE_FRAMES.size()
 	hero_sprite.texture = IRON_VOW_IDLE_FRAMES[idle_frame_index]
+	enemy_sprite.texture = RIFT_HOUND_IDLE_FRAMES[idle_frame_index]
+
+
+func _input(event: InputEvent) -> void:
+	if not event.is_pressed() or event.is_echo():
+		return
+	match event.keycode:
+		KEY_TAB:
+			_set_interface_mode(InterfaceMode.MANAGEMENT if interface_mode == InterfaceMode.COMPACT else InterfaceMode.COMPACT)
+			get_viewport().set_input_as_handled()
+		KEY_R:
+			_set_interface_mode(InterfaceMode.SETTLEMENT)
+			get_viewport().set_input_as_handled()
+		KEY_ESCAPE:
+			_set_interface_mode(InterfaceMode.COMPACT)
+			get_viewport().set_input_as_handled()
+
+
+func _configure_desktop_window() -> void:
+	get_window().borderless = true
+	get_window().always_on_top = true
+	get_window().unresizable = false
+	get_window().transparent = false
+	get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+
+
+func _set_interface_mode(mode: InterfaceMode) -> void:
+	interface_mode = mode
+	var compact := mode == InterfaceMode.COMPACT
+	settlement_shade.visible = not compact
+	settlement_panel.visible = mode == InterfaceMode.SETTLEMENT
+	management_panel.visible = mode == InterfaceMode.MANAGEMENT
+	%TopChrome.visible = not compact
+	compact_button.text = "收起" if not compact else "展开"
+
+	if compact:
+		get_window().content_scale_size = Vector2i(1120, 180)
+		get_window().size = Vector2i(1120, 180)
+		_anchor_window_to_work_area()
+	else:
+		get_window().content_scale_size = Vector2i(960, 540)
+		get_window().size = expanded_window_size
+		_center_window_in_work_area()
+
+
+func _anchor_window_to_work_area() -> void:
+	var screen := DisplayServer.window_get_current_screen()
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	get_window().position = Vector2i(
+		usable.position.x + usable.size.x - get_window().size.x - 16,
+		usable.position.y + usable.size.y - get_window().size.y - 8
+	)
+
+
+func _center_window_in_work_area() -> void:
+	var screen := DisplayServer.window_get_current_screen()
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	get_window().position = usable.position + (usable.size - get_window().size) / 2
 
 
 func _refresh_runtime_ui() -> void:
@@ -88,6 +177,7 @@ func _refresh_runtime_ui() -> void:
 	(enemy_health.get_node("Value") as Label).text = "%d / %d" % [roundi(simulation.enemy_health), roundi(simulation.enemy_max_health)]
 	enemy_stats.text = "等级 %d  ·  已击杀 %d" % [simulation.enemy_level, simulation.kill_count]
 	efficiency_label.text = "%.1f 击杀/分钟" % simulation.kills_per_minute()
+	loot_button.text = "战利品  %d" % simulation.inventory.size()
 
 
 func _refresh_inventory() -> void:
@@ -105,6 +195,10 @@ func _refresh_inventory() -> void:
 			inventory_list.select(new_index)
 			_show_item(selected_item)
 			return
+	if inventory_list.item_count > 0:
+		inventory_list.select(0)
+		_show_item(inventory_list.get_item_metadata(0) as EquipmentItem)
+		return
 	item_detail.text = "等待装备掉落……"
 	equip_button.disabled = true
 

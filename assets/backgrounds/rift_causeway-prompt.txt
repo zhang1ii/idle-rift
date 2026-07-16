@@ -1,0 +1,1 @@
+Production-ready wide pixel-art environment for a dark fantasy idle RPG battle strip: a ruined stone causeway above a teal rift canyon, distant cathedral ruins, restrained contrast behind combatants, and a clear ground plane. No UI, text, characters, creatures, or loot.
