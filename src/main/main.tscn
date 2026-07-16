@@ -1,6 +1,67 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource path="res://src/main/main.gd" type="Script" id="1_main"]
+[ext_resource path="res://assets/fonts/NotoSansSC-IdleRift.ttf" type="FontFile" id="2_font"]
+
+[sub_resource type="Theme" id="ThemeInterface"]
+default_font = ExtResource("2_font")
+
+[sub_resource type="StyleBoxFlat" id="StylePanel"]
+bg_color = Color(0.065, 0.075, 0.095, 0.98)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.19, 0.21, 0.25, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleHero"]
+bg_color = Color(0.08, 0.105, 0.13, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.42, 0.53, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleEnemy"]
+bg_color = Color(0.13, 0.075, 0.075, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.24, 0.2, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleHeroBar"]
+bg_color = Color(0.2, 0.58, 0.48, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleEnemyBar"]
+bg_color = Color(0.72, 0.22, 0.19, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBarBackground"]
+bg_color = Color(0.02, 0.025, 0.035, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -9,6 +70,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = SubResource("ThemeInterface")
 script = ExtResource("1_main")
 
 [node name="Background" type="ColorRect" parent="."]
@@ -18,33 +80,337 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.035, 0.043, 0.055, 1)
+color = Color(0.025, 0.03, 0.04, 1)
 
-[node name="Content" type="VBoxContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -48.0
-offset_right = 180.0
-offset_bottom = 48.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Content"]
+[node name="Brand" type="VBoxContainer" parent="Margin/Root/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.82, 0.66, 0.31, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_constants/separation = -2
+
+[node name="Title" type="Label" parent="Margin/Root/Header/Brand"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.7, 0.31, 1)
+theme_override_font_sizes/font_size = 20
 text = "IDLE RIFT"
+
+[node name="Subtitle" type="Label" parent="Margin/Root/Header/Brand"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47, 0.5, 0.55, 1)
+theme_override_font_sizes/font_size = 9
+text = "灰烬远征 · 自动战斗原型"
+
+[node name="Spacer" type="Control" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RiftLabel" type="Label" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.82, 0.85, 1)
+text = "裂隙 01"
+vertical_alignment = 1
+
+[node name="GoldLabel" type="Label" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.75, 0.34, 1)
+text = "0 金币"
+vertical_alignment = 1
+
+[node name="PauseButton" type="Button" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+text = "暂停"
+
+[node name="SpeedButton" type="Button" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "1×"
+
+[node name="Rule" type="HSeparator" parent="Margin/Root"]
+layout_mode = 2
+modulate = Color(0.35, 0.37, 0.4, 1)
+
+[node name="MainRow" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="BattleColumn" type="VBoxContainer" parent="Margin/Root/MainRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="BattlePanel" type="PanelContainer" parent="Margin/Root/MainRow/BattleColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StylePanel")
+
+[node name="BattleMargin" type="MarginContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="BattleVBox" type="VBoxContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="StageRow" type="HBoxContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox"]
+layout_mode = 2
+
+[node name="Stage" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/StageRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.57, 0.6, 0.65, 1)
+theme_override_font_sizes/font_size = 10
+text = "破碎回廊 · 持续遭遇"
+
+[node name="StageSpacer" type="Control" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/StageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EfficiencyLabel" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/StageRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.73, 0.67, 1)
+theme_override_font_sizes/font_size = 10
+text = "0.0 击杀/分钟"
+
+[node name="Arena" type="HBoxContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="HeroPanel" type="PanelContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleHero")
+
+[node name="HeroMargin" type="MarginContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HeroVBox" type="VBoxContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Role" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.7, 0.82, 1)
+theme_override_font_sizes/font_size = 10
+text = "远征者"
+
+[node name="Name" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "无名守望者"
+
+[node name="HeroHealth" type="ProgressBar" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 17)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBarBackground")
+theme_override_styles/fill = SubResource("StyleHeroBar")
+
+[node name="Value" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox/HeroHealth"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 9
+text = "100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HeroStats" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/HeroPanel/HeroMargin/HeroVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.69, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "伤害 8 · 攻速 1.00\n护甲 0 · 暴击 5%"
+
+[node name="Versus" type="VBoxContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena"]
+custom_minimum_size = Vector2(42, 0)
+layout_mode = 2
+alignment = 1
+
+[node name="Mark" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/Versus"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.58, 0.3, 1)
+theme_override_font_sizes/font_size = 21
+text = "⚔"
 horizontal_alignment = 1
 
-[node name="Status" type="Label" parent="Content"]
+[node name="Auto" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/Versus"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.75, 0.78, 1)
-theme_override_font_sizes/font_size = 14
-text = "Repository scaffold ready — first combat loop comes next"
+theme_override_colors/font_color = Color(0.4, 0.42, 0.46, 1)
+theme_override_font_sizes/font_size = 8
+text = "AUTO"
 horizontal_alignment = 1
+
+[node name="EnemyPanel" type="PanelContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleEnemy")
+
+[node name="EnemyMargin" type="MarginContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/EnemyPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="EnemyVBox" type="VBoxContainer" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/EnemyPanel/EnemyMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Role" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/EnemyPanel/EnemyMargin/EnemyVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.42, 0.36, 1)
+theme_override_font_sizes/font_size = 10
+text = "裂隙生物"
+
+[node name="EnemyName" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/EnemyPanel/EnemyMargin/EnemyVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "腐化鼠人"
+
+[node name="EnemyHealth" type="ProgressBar" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/EnemyPanel/EnemyMargin/EnemyVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 17)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBarBackground")
+theme_override_styles/fill = SubResource("StyleEnemyBar")
+
+[node name="Value" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/EnemyPanel/EnemyMargin/EnemyVBox/EnemyHealth"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 9
+text = "31 / 31"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EnemyStats" type="Label" parent="Margin/Root/MainRow/BattleColumn/BattlePanel/BattleMargin/BattleVBox/Arena/EnemyPanel/EnemyMargin/EnemyVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "等级 1 · 已击杀 0"
+
+[node name="BattleLog" type="RichTextLabel" parent="Margin/Root/MainRow/BattleColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.56, 0.59, 0.64, 1)
+theme_override_font_sizes/normal_font_size = 9
+theme_override_styles/normal = SubResource("StylePanel")
+bbcode_enabled = true
+fit_content = false
+scroll_active = false
+
+[node name="InventoryPanel" type="PanelContainer" parent="Margin/Root/MainRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StylePanel")
+
+[node name="InventoryMargin" type="MarginContainer" parent="Margin/Root/MainRow/InventoryPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 7
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 7
+theme_override_constants/margin_bottom = 6
+
+[node name="InventoryVBox" type="VBoxContainer" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="InventoryHeader" type="HBoxContainer" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin/InventoryVBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin/InventoryVBox/InventoryHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.84, 0.87, 1)
+theme_override_font_sizes/font_size = 13
+text = "战利品"
+
+[node name="Spacer" type="Control" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin/InventoryVBox/InventoryHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Hint" type="Label" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin/InventoryVBox/InventoryHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.43, 0.45, 0.49, 1)
+theme_override_font_sizes/font_size = 9
+text = "自动拾取"
+
+[node name="InventoryList" type="ItemList" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin/InventoryVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 10
+allow_reselect = true
+
+[node name="ItemDetail" type="Label" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin/InventoryVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.65, 0.7, 1)
+theme_override_font_sizes/font_size = 9
+text = "等待装备掉落……"
+autowrap_mode = 2
+
+[node name="EquipButton" type="Button" parent="Margin/Root/MainRow/InventoryPanel/InventoryMargin/InventoryVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "装备选中物品"
+
+[node name="EquippedPanel" type="PanelContainer" parent="Margin/Root"]
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StylePanel")
+
+[node name="EquippedLabel" type="Label" parent="Margin/Root/EquippedPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.49, 0.52, 0.57, 1)
+theme_override_font_sizes/font_size = 8
+text = "裂隙武器：空   守望头盔：空   远征胸甲：空   余烬戒指：空   回响护符：空"
+horizontal_alignment = 1
+vertical_alignment = 1

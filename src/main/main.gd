@@ -1,5 +1,147 @@
 extends Control
 
+const Combat = preload("res://src/combat/combat_simulation.gd")
+const Equipment = preload("res://src/equipment/equipment_item.gd")
+
+@onready var rift_label: Label = %RiftLabel
+@onready var gold_label: Label = %GoldLabel
+@onready var hero_health: ProgressBar = %HeroHealth
+@onready var hero_stats: Label = %HeroStats
+@onready var enemy_name: Label = %EnemyName
+@onready var enemy_health: ProgressBar = %EnemyHealth
+@onready var enemy_stats: Label = %EnemyStats
+@onready var efficiency_label: Label = %EfficiencyLabel
+@onready var battle_log: RichTextLabel = %BattleLog
+@onready var inventory_list: ItemList = %InventoryList
+@onready var item_detail: Label = %ItemDetail
+@onready var equip_button: Button = %EquipButton
+@onready var equipped_label: Label = %EquippedLabel
+@onready var pause_button: Button = %PauseButton
+@onready var speed_button: Button = %SpeedButton
+
+var simulation: CombatSimulation
+var log_lines: Array[String] = []
+
 
 func _ready() -> void:
-	print("Idle Rift project scaffold loaded.")
+	simulation = Combat.new()
+	simulation.battle_event.connect(_on_battle_event)
+	simulation.equipment_dropped.connect(_on_equipment_dropped)
+	simulation.inventory_changed.connect(_refresh_inventory)
+	simulation.equipment_changed.connect(_refresh_equipment)
+	inventory_list.item_selected.connect(_on_inventory_selected)
+	equip_button.pressed.connect(_on_equip_pressed)
+	pause_button.pressed.connect(_on_pause_pressed)
+	speed_button.pressed.connect(_on_speed_pressed)
+	_on_battle_event("远征开始。英雄将自动战斗并收集装备。")
+	_refresh_inventory()
+	_refresh_equipment()
+	_refresh_runtime_ui()
+
+
+func _process(delta: float) -> void:
+	simulation.tick(delta)
+	_refresh_runtime_ui()
+
+
+func _refresh_runtime_ui() -> void:
+	rift_label.text = "裂隙 %02d" % simulation.current_rift_level()
+	gold_label.text = "%d 金币" % simulation.gold
+	hero_health.max_value = simulation.hero_max_health()
+	hero_health.value = simulation.hero_health
+	(hero_health.get_node("Value") as Label).text = "%d / %d" % [roundi(simulation.hero_health), roundi(simulation.hero_max_health())]
+	hero_stats.text = "伤害 %.0f  ·  攻速 %.2f\n护甲 %.0f  ·  暴击 %d%%" % [
+		simulation.hero_damage(),
+		simulation.hero_attack_speed(),
+		simulation.hero_armor(),
+		roundi(simulation.hero_critical_chance() * 100.0),
+	]
+	enemy_name.text = simulation.enemy_name
+	enemy_health.max_value = simulation.enemy_max_health
+	enemy_health.value = simulation.enemy_health
+	(enemy_health.get_node("Value") as Label).text = "%d / %d" % [roundi(simulation.enemy_health), roundi(simulation.enemy_max_health)]
+	enemy_stats.text = "等级 %d  ·  已击杀 %d" % [simulation.enemy_level, simulation.kill_count]
+	efficiency_label.text = "%.1f 击杀/分钟" % simulation.kills_per_minute()
+
+
+func _refresh_inventory() -> void:
+	var selected_item: EquipmentItem = _selected_item()
+	inventory_list.clear()
+	for item in simulation.inventory:
+		var index := inventory_list.item_count
+		inventory_list.add_item("[%d] %s  ·  %d" % [item.item_level, item.display_name(), item.power_score()])
+		inventory_list.set_item_metadata(index, item)
+		inventory_list.set_item_custom_fg_color(index, Equipment.rarity_color(item.rarity))
+
+	if selected_item != null:
+		var new_index := simulation.inventory.find(selected_item)
+		if new_index >= 0:
+			inventory_list.select(new_index)
+			_show_item(selected_item)
+			return
+	item_detail.text = "等待装备掉落……"
+	equip_button.disabled = true
+
+
+func _refresh_equipment() -> void:
+	var lines: Array[String] = []
+	for slot in Equipment.Slot.values():
+		var item := simulation.equipped_item(slot)
+		var value := "空"
+		if item != null:
+			value = "%s · %d" % [item.display_name(), item.power_score()]
+		lines.append("%s：%s" % [Equipment.slot_name(slot), value])
+	equipped_label.text = "   ".join(lines)
+
+
+func _on_inventory_selected(index: int) -> void:
+	_show_item(inventory_list.get_item_metadata(index) as EquipmentItem)
+
+
+func _show_item(item: EquipmentItem) -> void:
+	if item == null:
+		return
+	var comparison := ""
+	var current := simulation.equipped_item(item.slot)
+	if current == null:
+		comparison = "当前部位为空"
+	else:
+		var delta := item.power_score() - current.power_score()
+		comparison = "相对当前 %+d 战力" % delta
+	item_detail.text = "%s\n%s\n%s" % [item.display_name(), item.short_description(), comparison]
+	item_detail.modulate = Equipment.rarity_color(item.rarity)
+	equip_button.disabled = false
+
+
+func _on_equip_pressed() -> void:
+	var item := _selected_item()
+	if item != null:
+		simulation.equip_item(item)
+
+
+func _on_pause_pressed() -> void:
+	simulation.paused = not simulation.paused
+	pause_button.text = "继续" if simulation.paused else "暂停"
+
+
+func _on_speed_pressed() -> void:
+	simulation.speed_multiplier = 2.0 if simulation.speed_multiplier == 1.0 else 1.0
+	speed_button.text = "%.0f×" % simulation.speed_multiplier
+
+
+func _on_battle_event(message: String) -> void:
+	log_lines.append(message)
+	if log_lines.size() > 6:
+		log_lines.pop_front()
+	battle_log.text = "\n".join(log_lines)
+
+
+func _on_equipment_dropped(item: EquipmentItem) -> void:
+	_on_battle_event("掉落：%s（战力 %d）" % [item.display_name(), item.power_score()])
+
+
+func _selected_item() -> EquipmentItem:
+	var selected := inventory_list.get_selected_items()
+	if selected.is_empty():
+		return null
+	return inventory_list.get_item_metadata(selected[0]) as EquipmentItem
