@@ -100,9 +100,12 @@ func _update_sprite_animation(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not event.is_pressed() or event.is_echo():
+	if not event is InputEventKey:
 		return
-	match event.keycode:
+	var key_event := event as InputEventKey
+	if not key_event.is_pressed() or key_event.is_echo():
+		return
+	match key_event.keycode:
 		KEY_TAB:
 			_set_interface_mode(InterfaceMode.MANAGEMENT if interface_mode == InterfaceMode.COMPACT else InterfaceMode.COMPACT)
 			get_viewport().set_input_as_handled()
