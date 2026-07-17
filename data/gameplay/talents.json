@@ -1,20 +1,95 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "trees": {
     "fury_warrior": {
+      "name": "狂怒战士",
+      "prototype_point_budget": 7,
+      "change_only_before_battle": true,
+      "free_respec_before_battle": true,
+      "point_source_status": "pending_character_progression",
+      "branches": [
+        {"id": "blood", "name": "血痕", "description": "强化流血、DOT续航和对流血目标的终结能力。"},
+        {"id": "fury", "name": "狂潮", "description": "强化怒意生成、爆发窗口和泄怒技能。"},
+        {"id": "guard", "name": "铁壁", "description": "强化最大生命、怒意壁垒和承伤后的资源回流。"}
+      ],
       "nodes": [
         {
-          "id": "steady_rage",
-          "name": "稳定怒意",
-          "tier": 1,
-          "exclusive_group": "fury_frequency_conversion",
-          "target_skill": "rage_barrier",
-          "prototype_status": "mitigates_breakpoints",
-          "description": "怒意壁垒的冷却不再受急速影响，急速转化为护盾强度。",
-          "effects": {
-            "haste_affects_cooldown": false,
-            "haste_to_power_per_percent": 0.008
-          }
+          "id": "carved_wounds", "name": "刻骨裂痕", "branch": "blood", "tier": 1,
+          "cost": 1, "required_total_points": 0, "prerequisites": [],
+          "description": "流血伤害提高15%。",
+          "effects": {"bleed_damage_multiplier": 1.15}
+        },
+        {
+          "id": "blood_memory", "name": "血迹铭刻", "branch": "blood", "tier": 2,
+          "cost": 1, "required_total_points": 2, "prerequisites": ["carved_wounds"],
+          "description": "鲜血回响转化90%的DOT记录，单次治疗上限提高至40%最大生命。",
+          "effects": {"dot_heal_conversion_ratio": 0.90, "dot_heal_cap_ratio": 0.40}
+        },
+        {
+          "id": "thirsting_wounds", "name": "饥渴伤口", "branch": "blood", "tier": 3,
+          "cost": 1, "required_total_points": 4, "prerequisites": ["blood_memory"],
+          "description": "流血造成伤害时恢复该次伤害8%的生命。",
+          "effects": {"bleed_leech_ratio": 0.08}
+        },
+        {
+          "id": "crimson_execution", "name": "血潮终结", "branch": "blood", "tier": 4,
+          "cost": 1, "required_total_points": 6, "prerequisites": ["thirsting_wounds"],
+          "exclusive_group": "fury_capstone",
+          "description": "泄怒技能命中流血目标时，额外结算剩余流血伤害的40%，不消耗流血。",
+          "effects": {"remaining_bleed_burst_ratio": 0.40}
+        },
+
+        {
+          "id": "boiling_spirit", "name": "沸腾血性", "branch": "fury", "tier": 1,
+          "cost": 1, "required_total_points": 0, "prerequisites": [],
+          "description": "撕裂打击额外获得5点基础怒意。",
+          "effects": {"builder_flat_rage_bonus": 5.0}
+        },
+        {
+          "id": "chained_burst", "name": "连锁爆发", "branch": "fury", "tier": 2,
+          "cost": 1, "required_total_points": 2, "prerequisites": ["boiling_spirit"],
+          "description": "狂怒爆发额外强化1个成功释放的技能。",
+          "effects": {"burst_charge_bonus": 1}
+        },
+        {
+          "id": "precise_release", "name": "精准倾泻", "branch": "fury", "tier": 3,
+          "cost": 1, "required_total_points": 4, "prerequisites": ["chained_burst"],
+          "description": "单体和范围泄怒技能伤害提高15%。",
+          "effects": {"spender_damage_multiplier": 1.15}
+        },
+        {
+          "id": "endless_frenzy", "name": "无尽狂潮", "branch": "fury", "tier": 4,
+          "cost": 1, "required_total_points": 6, "prerequisites": ["precise_release"],
+          "exclusive_group": "fury_capstone",
+          "description": "爆发强化期间释放泄怒技能，返还实际消耗怒意的20%。",
+          "effects": {"burst_spender_refund_ratio": 0.20}
+        },
+
+        {
+          "id": "thick_sinew", "name": "厚重筋骨", "branch": "guard", "tier": 1,
+          "cost": 1, "required_total_points": 0, "prerequisites": [],
+          "description": "最大生命提高8%。",
+          "effects": {"max_health_multiplier": 1.08}
+        },
+        {
+          "id": "steady_rage", "name": "稳定怒意", "branch": "guard", "tier": 2,
+          "cost": 1, "required_total_points": 2, "prerequisites": ["thick_sinew"],
+          "target_skill": "rage_barrier", "prototype_status": "mitigates_breakpoints",
+          "description": "怒意壁垒的冷却不再受急速影响，每1%急速使其护盾提高0.8%。",
+          "effects": {"haste_affects_cooldown": false, "haste_to_power_per_percent": 0.008}
+        },
+        {
+          "id": "shield_reflow", "name": "怒盾回流", "branch": "guard", "tier": 3,
+          "cost": 1, "required_total_points": 4, "prerequisites": ["steady_rage"],
+          "description": "怒意壁垒被完全击破时，返还本次消耗怒意的20%。",
+          "effects": {"barrier_break_rage_refund_ratio": 0.20}
+        },
+        {
+          "id": "immovable", "name": "不动如山", "branch": "guard", "tier": 4,
+          "cost": 1, "required_total_points": 6, "prerequisites": ["shield_reflow"],
+          "exclusive_group": "fury_capstone",
+          "description": "释放怒意壁垒后获得4秒15%减伤。",
+          "effects": {"barrier_damage_reduction": 0.15, "barrier_reduction_duration": 4.0}
         }
       ]
     }
