@@ -9,6 +9,7 @@ const CombatRules = preload("res://src/gameplay/combat_rules.gd")
 const CharacterStats = preload("res://src/gameplay/character_stats.gd")
 
 const RESPAWN_DELAY := 1.15
+const ATTACK_CONTACT_DELAY := 0.27
 
 var hero_stats = CharacterStats.new()
 var hero_health := 0.0
@@ -29,6 +30,7 @@ var _cooldowns: Dictionary = {}
 var _bleed_ticks := 0
 var _bleed_timer := 0.0
 var _bleed_damage := 0.0
+var _pending_attacks: Array[Dictionary] = []
 var _rng := RandomNumberGenerator.new()
 
 
@@ -46,6 +48,7 @@ func start(starting_floor := 1) -> void:
 	hero_shield = 0.0
 	_hero_timer = 0.55
 	_respawn_timer = -1.0
+	_pending_attacks.clear()
 	_running = true
 	_spawn_enemy()
 	_emit("battle_started", {"floor": floor_number})
@@ -62,6 +65,7 @@ func tick(delta: float) -> void:
 			_spawn_enemy()
 		return
 
+	_tick_pending_attacks(delta)
 	_tick_bleed(delta)
 	if enemy_health <= 0.0:
 		return
@@ -126,10 +130,34 @@ func _cast_attack(skill_id: String) -> void:
 	var critical := _rng.randf() < hero_stats.critical_chance()
 	if critical:
 		damage *= 2.0
-	_apply_enemy_damage(damage, skill_id, critical, false)
-	if skill_id == "rage_builder" and enemy_health > 0.0:
-		_apply_bleed(0.18)
+	_pending_attacks.append({
+		"remaining": ATTACK_CONTACT_DELAY,
+		"damage": damage,
+		"source": skill_id,
+		"critical": critical,
+		"applies_bleed": skill_id == "rage_builder",
+	})
 	_emit("rage_changed", {"value": hero_rage, "delta": hero_rage - rage_before})
+
+
+func _tick_pending_attacks(delta: float) -> void:
+	for index in range(_pending_attacks.size() - 1, -1, -1):
+		var pending: Dictionary = _pending_attacks[index]
+		pending["remaining"] = float(pending["remaining"]) - delta
+		if pending["remaining"] > 0.0:
+			_pending_attacks[index] = pending
+			continue
+		_pending_attacks.remove_at(index)
+		if enemy_health <= 0.0:
+			continue
+		_apply_enemy_damage(
+			float(pending["damage"]),
+			String(pending["source"]),
+			bool(pending["critical"]),
+			false,
+		)
+		if bool(pending["applies_bleed"]) and enemy_health > 0.0:
+			_apply_bleed(0.18)
 
 
 func _cast_barrier() -> void:
@@ -212,6 +240,7 @@ func _enemy_attack() -> void:
 func _defeat_enemy() -> void:
 	kills += 1
 	_bleed_ticks = 0
+	_pending_attacks.clear()
 	_respawn_timer = RESPAWN_DELAY
 	_emit("enemy_defeated", {
 		"kills": kills,
@@ -228,7 +257,7 @@ func _spawn_enemy() -> void:
 	_enemy_timer = enemy_attack_interval
 	_respawn_timer = -1.0
 	_emit("enemy_spawned", {
-		"name": "裂隙猎犬",
+		"name": "裂隙战獒",
 		"health": enemy_health,
 		"max_health": enemy_max_health,
 	})

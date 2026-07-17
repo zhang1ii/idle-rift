@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "name": "fury_barbarian",
+  "processing": {
+    "cell_size": 96,
+    "fit_scale": 0.82,
+    "trim_border": 4,
+    "edge_clean_depth": 3,
+    "align": "feet",
+    "shared_scale": true,
+    "scale_strategy": "preserve",
+    "component_mode": "largest",
+    "component_padding": 0,
+    "min_component_area": 1,
+    "edge_touch_margin": 0
+  },
+  "output_origin": [
+    48.0,
+    88
+  ],
+  "reference": {
+    "target": "player",
+    "mode": "attack",
+    "rows": 2,
+    "cols": 3,
+    "body_scale_mean": 0.3657818436435165,
+    "body_scale_cv": 0.032734419132797836,
+    "anchor_y_mean": 0.7519841269841271
+  },
+  "qc": {
+    "max_body_scale_drift": 0.08
+  }
+}

@@ -3,18 +3,36 @@ extends Control
 
 const FuryBattleModel = preload("res://src/combat/fury_battle_model.gd")
 
-const HERO_FRAMES := [
-	preload("res://assets/sprites/characters/iron_vow/idle/frame_01.png"),
-	preload("res://assets/sprites/characters/iron_vow/idle/frame_02.png"),
-	preload("res://assets/sprites/characters/iron_vow/idle/frame_03.png"),
-	preload("res://assets/sprites/characters/iron_vow/idle/frame_04.png"),
+const HERO_ATTACK_FRAMES := [
+	preload("res://assets/sprites/characters/fury_barbarian/attack/attack-1.png"),
+	preload("res://assets/sprites/characters/fury_barbarian/attack/attack-2.png"),
+	preload("res://assets/sprites/characters/fury_barbarian/attack/attack-3.png"),
+	preload("res://assets/sprites/characters/fury_barbarian/attack/attack-4.png"),
+	preload("res://assets/sprites/characters/fury_barbarian/attack/attack-5.png"),
+	preload("res://assets/sprites/characters/fury_barbarian/attack/attack-6.png"),
 ]
-const ENEMY_FRAMES := [
-	preload("res://assets/sprites/enemies/rift_hound/idle/idle-1.png"),
-	preload("res://assets/sprites/enemies/rift_hound/idle/idle-2.png"),
-	preload("res://assets/sprites/enemies/rift_hound/idle/idle-3.png"),
-	preload("res://assets/sprites/enemies/rift_hound/idle/idle-4.png"),
+const ENEMY_IDLE_FRAMES := [
+	preload("res://assets/sprites/enemies/rift_boar/idle/idle-1.png"),
+	preload("res://assets/sprites/enemies/rift_boar/idle/idle-2.png"),
+	preload("res://assets/sprites/enemies/rift_boar/idle/idle-3.png"),
+	preload("res://assets/sprites/enemies/rift_boar/idle/idle-4.png"),
 ]
+const ENEMY_HURT_FRAMES := [
+	preload("res://assets/sprites/enemies/rift_boar/hurt/hurt-1.png"),
+	preload("res://assets/sprites/enemies/rift_boar/hurt/hurt-2.png"),
+	preload("res://assets/sprites/enemies/rift_boar/hurt/hurt-3.png"),
+	preload("res://assets/sprites/enemies/rift_boar/hurt/hurt-4.png"),
+]
+
+# Alpha bounds from the generated, QC-checked contact poses. Keeping these
+# values beside the art references makes contact placement deterministic.
+const HERO_CELL_CENTER_X := 48.0
+const HERO_CONTACT_BLADE_X := 85.0
+const ENEMY_CELL_CENTER_X := 56.0
+const ENEMY_FRONT_SHOULDER_X := 28.0
+const ENEMY_CELL_CENTER_Y := 56.0
+const ENEMY_FRONT_SHOULDER_Y := 78.0
+const CONTACT_PENETRATION := 3.0
 
 @onready var world: Node2D = %World
 @onready var hero: AnimatedSprite2D = %Hero
@@ -39,13 +57,12 @@ var _shake_tween: Tween
 
 
 func _ready() -> void:
-	_setup_sprite(hero, HERO_FRAMES, "idle", 7.0)
-	_setup_sprite(enemy, ENEMY_FRAMES, "idle", 6.0)
+	_setup_hero_sprite()
+	_setup_enemy_sprite()
 	_hero_origin = hero.position
 	_enemy_origin = enemy.position
 	_world_origin = world.position
 	fx.hero_position = hero.position + Vector2(0, -8)
-	fx.enemy_position = enemy.position + Vector2(0, -8)
 	_style_bars()
 	model.event_emitted.connect(_on_battle_event)
 	model.start(1)
@@ -60,20 +77,34 @@ func _process(delta: float) -> void:
 	_refresh_hud()
 
 
-func _setup_sprite(
-	sprite: AnimatedSprite2D,
-	textures: Array,
-	animation_name: String,
-	fps: float,
-) -> void:
+func _setup_hero_sprite() -> void:
 	var frames := SpriteFrames.new()
+	_add_animation(frames, "idle", [HERO_ATTACK_FRAMES[0]], 1.0, true)
+	_add_animation(frames, "attack", HERO_ATTACK_FRAMES, 11.111, false)
+	hero.sprite_frames = frames
+	hero.play("idle")
+
+
+func _setup_enemy_sprite() -> void:
+	var frames := SpriteFrames.new()
+	_add_animation(frames, "idle", ENEMY_IDLE_FRAMES, 6.0, true)
+	_add_animation(frames, "hurt", ENEMY_HURT_FRAMES, 14.0, false)
+	enemy.sprite_frames = frames
+	enemy.play("idle")
+
+
+func _add_animation(
+	frames: SpriteFrames,
+	animation_name: String,
+	textures: Array,
+	fps: float,
+	loop: bool,
+) -> void:
 	frames.add_animation(animation_name)
 	frames.set_animation_speed(animation_name, fps)
-	frames.set_animation_loop(animation_name, true)
+	frames.set_animation_loop(animation_name, loop)
 	for texture in textures:
 		frames.add_frame(animation_name, texture)
-	sprite.sprite_frames = frames
-	sprite.play(animation_name)
 
 
 func _on_battle_event(event: Dictionary) -> void:
@@ -104,10 +135,10 @@ func _play_skill_cast(event: Dictionary) -> void:
 	match event.skill_id:
 		"rage_builder":
 			skill_detail.text = "撕裂 · 积攒怒意"
-			_lunge_hero(125.0, 0.11)
+			_play_contact_attack()
 		"single_spender":
 			skill_detail.text = "倾泻 50 怒意 · 重击"
-			_lunge_hero(145.0, 0.15)
+			_play_contact_attack()
 		"rage_barrier":
 			skill_detail.text = "怒意凝聚为护盾"
 			_pulse_sprite(hero, Color(0.35, 0.9, 1.0))
@@ -118,13 +149,34 @@ func _play_skill_cast(event: Dictionary) -> void:
 	banner.tween_property(skill_name, "modulate:a", 0.35, 0.28)
 
 
-func _lunge_hero(distance: float, duration: float) -> void:
+func _play_contact_attack() -> void:
 	hero.position = _hero_origin
+	hero.play("attack")
 	var tween := create_tween()
-	tween.tween_property(hero, "position:x", _hero_origin.x + distance, duration) \
+	tween.tween_property(hero, "position:x", _contact_hero_x(), 0.24) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_property(hero, "position:x", _hero_origin.x, duration * 1.8) \
+	tween.tween_interval(0.12)
+	tween.tween_property(hero, "position:x", _hero_origin.x, 0.20) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(hero.play.bind("idle"))
+
+
+func _contact_hero_x() -> float:
+	var enemy_front := (
+		_enemy_origin.x
+		+ (ENEMY_FRONT_SHOULDER_X - ENEMY_CELL_CENTER_X) * enemy.scale.x
+	)
+	var blade_reach := (HERO_CONTACT_BLADE_X - HERO_CELL_CENTER_X) * hero.scale.x
+	return enemy_front - blade_reach + CONTACT_PENETRATION
+
+
+func _weapon_contact_world() -> Vector2:
+	return Vector2(
+		_enemy_origin.x
+			+ (ENEMY_FRONT_SHOULDER_X - ENEMY_CELL_CENTER_X) * enemy.scale.x,
+		_enemy_origin.y
+			+ (ENEMY_FRONT_SHOULDER_Y - ENEMY_CELL_CENTER_Y) * enemy.scale.y,
+	)
 
 
 func _play_enemy_hit(event: Dictionary) -> void:
@@ -133,23 +185,21 @@ func _play_enemy_hit(event: Dictionary) -> void:
 		_spawn_blood_drop()
 		_spawn_damage_number(event.amount, event.critical, true, false)
 	else:
-		# Damage is resolved by the model immediately; presentation waits for the
-		# warrior to cross the arena so contact and impact read as one action.
-		var contact := create_tween()
-		contact.tween_interval(0.12 if strong else 0.085)
-		contact.tween_callback(_resolve_attack_impact.bind(event.duplicate(true), strong))
+		_resolve_attack_impact(event, strong)
 	enemy_health.value = event.health
 
 
 func _resolve_attack_impact(event: Dictionary, strong: bool) -> void:
-	fx.play_slash(strong)
+	fx.play_contact_sparks(_weapon_contact_world(), strong)
 	_hit_stop = 0.085 if strong else 0.045
 	_shake_world(5.0 if strong else 2.5)
 	_pulse_sprite(enemy, Color(1.0, 0.38, 0.28))
+	enemy.play("hurt")
 	var recoil := create_tween()
 	recoil.tween_property(enemy, "position:x", _enemy_origin.x + (15.0 if strong else 7.0), 0.06)
 	recoil.tween_property(enemy, "position:x", _enemy_origin.x, 0.18) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	recoil.tween_callback(enemy.play.bind("idle"))
 	_spawn_damage_number(event.amount, event.critical, false, false)
 
 
@@ -169,6 +219,8 @@ func _play_rage_change(event: Dictionary) -> void:
 
 func _enemy_spawn(event: Dictionary) -> void:
 	enemy.visible = true
+	enemy.play("idle")
+	enemy.rotation = 0.0
 	enemy.position = _enemy_origin + Vector2(35, 0)
 	enemy.modulate = Color(0.25, 0.8, 1.0, 0.0)
 	enemy_name.text = event.name

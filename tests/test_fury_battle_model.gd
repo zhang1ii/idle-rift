@@ -9,6 +9,20 @@ func _init() -> void:
 	var events: Array[Dictionary] = []
 	model.event_emitted.connect(func(event: Dictionary) -> void: events.append(event))
 	model.start(1)
+	model.tick(0.55)
+	assert(events.any(func(event: Dictionary) -> bool:
+		return event.type == "skill_cast_started" and event.skill_id == "rage_builder"))
+	assert(not events.any(func(event: Dictionary) -> bool:
+		return event.type == "enemy_damaged" and not event.is_dot))
+	model.tick(FuryBattleModel.ATTACK_CONTACT_DELAY - 0.01)
+	assert(not events.any(func(event: Dictionary) -> bool:
+		return event.type == "enemy_damaged" and not event.is_dot))
+	model.tick(0.02)
+	var cast_index := events.find_custom(func(event: Dictionary) -> bool:
+		return event.type == "skill_cast_started")
+	var impact_index := events.find_custom(func(event: Dictionary) -> bool:
+		return event.type == "enemy_damaged" and not event.is_dot)
+	assert(cast_index >= 0 and impact_index > cast_index)
 	for index in 4000:
 		model.tick(0.01)
 	assert(events.any(func(event: Dictionary) -> bool:

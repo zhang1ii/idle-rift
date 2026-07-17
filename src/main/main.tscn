@@ -50,25 +50,26 @@ color = Color(0.01, 0.015, 0.025, 0.72)
 unique_name_in_owner = true
 
 [node name="GroundShadowHero" type="Polygon2D" parent="World"]
-position = Vector2(205, 286)
+position = Vector2(205, 318)
 polygon = PackedVector2Array(-33, 0, -22, -5, 22, -5, 33, 0, 22, 5, -22, 5)
 color = Color(0.01, 0.015, 0.02, 0.55)
 
 [node name="GroundShadowEnemy" type="Polygon2D" parent="World"]
-position = Vector2(440, 286)
+position = Vector2(440, 318)
 polygon = PackedVector2Array(-40, 0, -28, -6, 28, -6, 40, 0, 28, 6, -28, 6)
 color = Color(0.01, 0.015, 0.02, 0.58)
 
 [node name="Hero" type="AnimatedSprite2D" parent="World"]
 unique_name_in_owner = true
+z_index = 2
 position = Vector2(205, 250)
 scale = Vector2(1.65, 1.65)
 
 [node name="Enemy" type="AnimatedSprite2D" parent="World"]
 unique_name_in_owner = true
+z_index = 1
 position = Vector2(440, 248)
 scale = Vector2(1.45, 1.45)
-flip_h = true
 
 [node name="BattleFx" type="Node2D" parent="World"]
 unique_name_in_owner = true
@@ -92,7 +93,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 12
-text = "裂隙猎犬"
+text = "裂隙战獒"
 horizontal_alignment = 1
 
 [node name="EnemyHealth" type="ProgressBar" parent="EnemyHud"]

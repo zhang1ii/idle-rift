@@ -1,0 +1,1 @@
+Six-frame 2x3 dark-fantasy pixel-art Fury Barbarian heavy axe attack on solid #FF00FF. The warrior faces screen-right in every frame, keeps a fixed feet anchor, and reaches real weapon contact in frame 4. No enemy, effects, text, glow, or cell crossing. Frame 4 was edited once to shorten the axe and keep all pixels safely inside its source cell.
