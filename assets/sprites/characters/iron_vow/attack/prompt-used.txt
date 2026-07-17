@@ -1,0 +1,1 @@
+Iron Vow fast grounded sword-and-shield attack, six frames in a 2x3 grid. Preserve the accepted idle identity, camera scale and feet anchor. Compact anticipation, wind-up, short strike, contact, follow-through and recovery. Body-only pixel art on solid #FF00FF; no detached FX and no edge contact.
