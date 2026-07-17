@@ -13,6 +13,14 @@ func _ready() -> void:
 	print("Idle Rift equipment drops and backpack model loaded.")
 
 
+func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
+	# The final gameplay rule is a pure player-authored cycle. Defense skills may
+	# check their own cooldown and resource, but never inspect the enemy timeline.
+	if skill_id == "rage_barrier":
+		return skill_cooldowns.get(skill_id, 0.0) <= 0.0 and hero_resource > 0.0
+	return super._is_skill_available(skill_id, skill)
+
+
 func _resolve_enemy_defeat() -> void:
 	if enemy_health > 0.0:
 		return

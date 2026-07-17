@@ -1,7 +1,7 @@
 extends SceneTree
 
 
-const MainScene = preload("res://src/main/main.tscn")
+const MainScene = preload("res://src/main/combat_prototype.tscn")
 
 
 func _init() -> void:
@@ -9,7 +9,7 @@ func _init() -> void:
 
 
 func _run_simulation() -> void:
-	await _simulate_loadout("默认单体+护盾", "")
+	await _simulate_loadout("默认单体 + 护盾", "")
 	await _simulate_loadout("AOE 替换护盾", "rage_barrier")
 	await _simulate_loadout("AOE 替换回血", "dot_heal")
 	quit()

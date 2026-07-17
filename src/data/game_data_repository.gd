@@ -111,3 +111,23 @@ func _validate() -> void:
 	assert(rift["floors"].size() >= 5, "第一裂隙至少需要 1～5 层定义。")
 	for floor_number in range(1, 6):
 		assert(not first_rift_floor(floor_number).is_empty(), "缺少第 %d 层定义。" % floor_number)
+
+	var loadout: Dictionary = rift["skill_loadout"]
+	assert(int(loadout["equipped_slots"]) == 5, "出战技能槽必须固定为 5。")
+	assert(int(loadout["initial_skill_pool_size"]) >= 6, "首版技能池至少需要 6 个技能。")
+	assert(bool(loadout["skill_pool_expandable"]), "技能池必须支持后续扩展。")
+	assert(bool(loadout["change_only_before_battle"]), "技能只能在战前更换。")
+	assert(String(loadout["scheduler"]) == "cyclic", "技能调度必须使用循环队列。")
+	assert(bool(loadout["skip_unavailable"]), "循环队列必须跳过不可用技能。")
+	assert(not bool(loadout["react_to_enemy_actions"]), "技能队列不能自动读取敌方行动。")
+
+	var potion: Dictionary = rift["potion"]
+	assert(not bool(potion["in_combat_allowed"]), "战斗中禁止使用药物。")
+	var economy: Dictionary = potion["economy"]
+	assert(float(economy["direct_drop_chance"]) >= 0.0, "药水掉率不能为负数。")
+	assert(float(economy["material_drop_chance"]) >= 0.0, "药材掉率不能为负数。")
+	assert(int(economy["craft"]["material_cost"]) > 0, "制作药水必须消耗材料。")
+	assert(int(economy["craft"]["gold_cost"]) >= 0, "制作金币消耗不能为负数。")
+	assert(int(economy["shop"]["base_price"]) > 0, "药水商店基础价格必须大于 0。")
+	assert(float(economy["shop"]["purchase_growth"]) > 0.0, "连续购买必须提高药水价格。")
+	assert(float(economy["shop"]["tier_growth"]) >= 0.0, "商店阶级价格增幅不能为负数。")

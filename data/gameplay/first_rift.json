@@ -2,13 +2,38 @@
   "normal_kills_to_clear": 20,
   "equipment_drop_chance": 0.03,
   "offline_efficiency": 0.60,
+  "skill_loadout": {
+    "equipped_slots": 5,
+    "initial_skill_pool_size": 6,
+    "skill_pool_expandable": true,
+    "change_only_before_battle": true,
+    "scheduler": "cyclic",
+    "skip_unavailable": true,
+    "react_to_enemy_actions": false
+  },
   "potion": {
     "starting_count": 3,
     "in_combat_allowed": false,
     "auto_use_before_normal_battle": true,
     "minimum_start_health_ratio": 0.80,
     "heal_max_health_ratio": 0.40,
-    "boss_entry_consumes_potion": false
+    "boss_entry_consumes_potion": false,
+    "economy": {
+      "direct_drop_chance": 0.01,
+      "material_drop_chance": 0.12,
+      "material_per_drop": 1,
+      "boss_potion_reward": 2,
+      "craft": {
+        "material_cost": 4,
+        "gold_cost": 10,
+        "output": 1
+      },
+      "shop": {
+        "base_price": 20,
+        "purchase_growth": 0.15,
+        "tier_growth": 0.50
+      }
+    }
   },
   "boss_entry": {
     "restore_full_health": true,
@@ -20,7 +45,7 @@
     {"floor": 1, "id": "rift_beast", "name": "裂隙野兽", "mechanic": "basic_attack", "tutorial": "基础攻击与技能循环"},
     {"floor": 2, "id": "blood_hound", "name": "腐血猎犬", "mechanic": "stacking_bleed", "maximum_stacks": 3, "tutorial": "持续战损与恢复"},
     {"floor": 3, "id": "ash_guard", "name": "灰甲守卫", "mechanic": "armor_and_reduction", "tutorial": "易伤、DOT与高倍率技能"},
-    {"floor": 4, "id": "groundbreaker", "name": "裂地蛮兽", "mechanic": "telegraphed_heavy_attack", "tutorial": "护盾、减伤与资源保留"},
+    {"floor": 4, "id": "groundbreaker", "name": "裂地蛮兽", "mechanic": "telegraphed_heavy_attack", "tutorial": "用纯技能顺序安排防御"},
     {"floor": 5, "id": "rift_warden", "name": "裂隙守卫", "mechanic": "boss_timeline", "is_boss": true, "target_kill_seconds": 48.0, "hard_enrage_seconds": 68.0, "tutorial": "综合Build检查"}
   ]
 }

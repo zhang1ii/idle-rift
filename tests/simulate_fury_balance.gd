@@ -1,7 +1,7 @@
 extends SceneTree
 
 
-const MainScene = preload("res://src/main/main.tscn")
+const MainScene = preload("res://src/main/combat_prototype.tscn")
 
 
 func _init() -> void:

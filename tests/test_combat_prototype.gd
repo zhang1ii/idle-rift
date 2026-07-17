@@ -63,13 +63,14 @@ func _run_tests() -> void:
 	game.current_floor = 5
 	game._start_battle()
 	game.hero_resource = 80.0
-	game.boss_ability_cursor = 2
-	game.boss_ability_timer = 1.0
+	game.boss_ability_cursor = 0
+	game.boss_ability_timer = BossRules.ABILITY_INTERVAL
 	game.skill_cooldowns["rage_barrier"] = 0.0
 	game.skill_cursor = game.skill_order.find("rage_barrier")
 	game._hero_take_action()
 	assert(is_equal_approx(game.hero_shield, FuryRules.barrier_amount(80.0)))
 	assert(game.hero_resource == 0.0)
+	assert(game.boss_ability_cursor == 0)
 	var health_before_hit: float = game.hero_health
 	game._take_hero_damage(BossRules.HEAVY_ATTACK_DAMAGE, "test")
 	assert(health_before_hit - game.hero_health < 20.0)
@@ -101,5 +102,5 @@ func _run_tests() -> void:
 	assert(game.highest_unlocked_floor == 10)
 	assert(game.current_floor == 6)
 
-	print("Combat tests passed: six-pick-five Fury kit and boss timeline.")
+	print("Combat tests passed: pure-order six-pick-five Fury kit and boss timeline.")
 	quit()
