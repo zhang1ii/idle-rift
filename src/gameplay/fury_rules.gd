@@ -5,6 +5,8 @@ const MAX_RAGE := 100.0
 const ATTACK_COOLDOWN := 4.0
 const BLEED_TICKS := 4
 const BLEED_INTERVAL := 1.0
+const STEADY_RAGE_TALENT_ID := "steady_rage"
+const STEADY_RAGE_HASTE_TO_BARRIER := 0.008
 
 
 static func skill_catalog() -> Dictionary:
@@ -82,5 +84,26 @@ static func mastery_damage_multiplier(mastery_percent: float) -> float:
 	return 1.0 + maxf(0.0, mastery_percent) / 100.0
 
 
-static func barrier_amount(rage_spent: float) -> float:
-	return maxf(0.0, rage_spent) * 1.20
+static func barrier_amount(
+	rage_spent: float,
+	haste_percent := 0.0,
+	steady_rage_enabled := false,
+) -> float:
+	var amount := maxf(0.0, rage_spent) * 1.20
+	if steady_rage_enabled:
+		amount *= steady_rage_power_multiplier(haste_percent)
+	return amount
+
+
+static func steady_rage_power_multiplier(haste_percent: float) -> float:
+	return 1.0 + maxf(0.0, haste_percent) * STEADY_RAGE_HASTE_TO_BARRIER
+
+
+static func cooldown_recovery_multiplier(
+	skill_id: String,
+	haste_percent: float,
+	steady_rage_enabled: bool,
+) -> float:
+	if steady_rage_enabled and skill_id == "rage_barrier":
+		return 1.0
+	return 1.0 + maxf(0.0, haste_percent) / 100.0

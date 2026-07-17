@@ -8,6 +8,7 @@ const REQUIRED_FILES := {
 	"enemies": "enemies.json",
 	"equipment": "equipment.json",
 	"first_rift": "first_rift.json",
+	"talents": "talents.json",
 }
 
 var _documents: Dictionary = {}
@@ -39,9 +40,23 @@ func first_rift() -> Dictionary:
 	return _documents["first_rift"]
 
 
+func talents() -> Dictionary:
+	return _documents["talents"]
+
+
 func first_rift_floor(floor_number: int) -> Dictionary:
 	for definition in first_rift()["floors"]:
 		if int(definition["floor"]) == floor_number:
+			return (definition as Dictionary).duplicate(true)
+	return {}
+
+
+func talent_definition(class_id: String, talent_id: String) -> Dictionary:
+	var trees: Dictionary = talents()["trees"]
+	if not trees.has(class_id):
+		return {}
+	for definition in trees[class_id]["nodes"]:
+		if String(definition["id"]) == talent_id:
 			return (definition as Dictionary).duplicate(true)
 	return {}
 
@@ -131,3 +146,12 @@ func _validate() -> void:
 	assert(int(economy["shop"]["base_price"]) > 0, "药水商店基础价格必须大于 0。")
 	assert(float(economy["shop"]["purchase_growth"]) > 0.0, "连续购买必须提高药水价格。")
 	assert(float(economy["shop"]["tier_growth"]) >= 0.0, "商店阶级价格增幅不能为负数。")
+
+	var steady_rage := talent_definition("fury_warrior", "steady_rage")
+	assert(not steady_rage.is_empty(), "狂怒战士必须定义稳定怒意天赋。")
+	assert(String(steady_rage["target_skill"]) == "rage_barrier", "稳定怒意必须作用于怒意壁垒。")
+	assert(not bool(steady_rage["effects"]["haste_affects_cooldown"]), "稳定怒意必须移除壁垒的急速冷却收益。")
+	assert(is_equal_approx(
+		float(steady_rage["effects"]["haste_to_power_per_percent"]),
+		0.008,
+	), "稳定怒意的急速转护盾系数必须与公式一致。")

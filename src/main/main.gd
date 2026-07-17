@@ -5,12 +5,29 @@ const EquipmentInventoryModel = preload("res://src/gameplay/equipment_inventory.
 
 var equipment_inventory = EquipmentInventoryModel.new()
 var last_dropped_item: Dictionary = {}
+var active_talent_ids: Array[String] = []
 
 
 func _ready() -> void:
 	super._ready()
 	equipment_inventory.rng.randomize()
-	print("Idle Rift equipment drops and backpack model loaded.")
+	print("Idle Rift equipment drops, backpack and talent hooks loaded.")
+
+
+func set_talent_enabled(talent_id: String, enabled: bool) -> bool:
+	if battle_state == BattleState.FIGHTING:
+		return false
+	if talent_id != FuryRules.STEADY_RAGE_TALENT_ID:
+		return false
+	if enabled and talent_id not in active_talent_ids:
+		active_talent_ids.append(talent_id)
+	elif not enabled:
+		active_talent_ids.erase(talent_id)
+	return true
+
+
+func is_talent_enabled(talent_id: String) -> bool:
+	return talent_id in active_talent_ids
 
 
 func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
@@ -19,6 +36,42 @@ func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
 	if skill_id == "rage_barrier":
 		return skill_cooldowns.get(skill_id, 0.0) <= 0.0 and hero_resource > 0.0
 	return super._is_skill_available(skill_id, skill)
+
+
+func _tick_skill_cooldowns(delta: float) -> void:
+	var steady_rage := is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID)
+	for skill_id in skill_cooldowns:
+		var recovery_multiplier := FuryRules.cooldown_recovery_multiplier(
+			skill_id,
+			hero_stats.haste,
+			steady_rage,
+		)
+		skill_cooldowns[skill_id] = maxf(
+			0.0,
+			skill_cooldowns[skill_id] - delta * recovery_multiplier,
+		)
+
+
+func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -> void:
+	if skill_id != "rage_barrier" \
+	or not is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID):
+		super._cast_fury_skill(skill_id, skill, skipped_count)
+		return
+	var notes := PackedStringArray()
+	if skipped_count > 0:
+		notes.append("跳过 %d 个不可用技能" % skipped_count)
+	var burst_active := burst_skills_remaining > 0
+	var rage_spent := hero_resource
+	skill_cooldowns[skill_id] = skill["cooldown"]
+	hero_shield += FuryRules.barrier_amount(
+		rage_spent,
+		hero_stats.haste,
+		true,
+	)
+	hero_resource = 0.0
+	notes.append("稳定怒意将急速转化为 %.0f 护盾" % hero_shield)
+	_consume_burst_charge(burst_active)
+	battle_event.text = "释放 %s · %s" % [skill["name"], "，".join(notes)]
 
 
 func _resolve_enemy_defeat() -> void:

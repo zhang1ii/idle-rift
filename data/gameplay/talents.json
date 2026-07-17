@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "trees": {
+    "fury_warrior": {
+      "nodes": [
+        {
+          "id": "steady_rage",
+          "name": "稳定怒意",
+          "tier": 1,
+          "exclusive_group": "fury_frequency_conversion",
+          "target_skill": "rage_barrier",
+          "prototype_status": "mitigates_breakpoints",
+          "description": "怒意壁垒的冷却不再受急速影响，急速转化为护盾强度。",
+          "effects": {
+            "haste_affects_cooldown": false,
+            "haste_to_power_per_percent": 0.008
+          }
+        }
+      ]
+    }
+  }
+}
