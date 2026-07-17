@@ -3,19 +3,23 @@ extends RefCounted
 
 
 var tree_definition: Dictionary = {}
+var maximum_points := 0
 var point_budget := 0
 var active_talent_ids: Array[String] = []
+var claimed_guard_boss_floors: Array[int] = []
 var battle_locked := false
 var _nodes_by_id: Dictionary = {}
 
 
-func configure(definition: Dictionary, budget_override := -1) -> void:
+func configure(definition: Dictionary, starting_earned_points := 0) -> void:
 	tree_definition = definition.duplicate(true)
 	assert(tree_definition.has("branches"), "Talent tree requires branches.")
 	assert(tree_definition.has("nodes"), "Talent tree requires nodes.")
-	point_budget = int(tree_definition["prototype_point_budget"]) \
-		if budget_override < 0 else maxi(0, budget_override)
+	assert(tree_definition.has("point_progression"), "Talent tree requires point progression.")
+	maximum_points = int(tree_definition["point_progression"]["maximum_points"])
+	point_budget = clampi(starting_earned_points, 0, maximum_points)
 	active_talent_ids.clear()
+	claimed_guard_boss_floors.clear()
 	battle_locked = false
 	_nodes_by_id.clear()
 	var branch_ids: Array[String] = []
@@ -41,6 +45,23 @@ func configure(definition: Dictionary, budget_override := -1) -> void:
 				int(_nodes_by_id[prerequisite_id]["tier"]) < int(node["tier"]),
 				"Talent prerequisite must be from an earlier tier: %s" % node_id,
 			)
+
+
+func record_guard_boss_victory(floor_number: int) -> int:
+	var progression: Dictionary = tree_definition["point_progression"]
+	var first_floor := int(progression["first_guard_boss_floor"])
+	var interval := int(progression["guard_boss_interval"])
+	if floor_number < first_floor or floor_number % interval != 0:
+		return 0
+	if floor_number in claimed_guard_boss_floors:
+		return 0
+	claimed_guard_boss_floors.append(floor_number)
+	var previous_budget := point_budget
+	point_budget = mini(
+		maximum_points,
+		point_budget + int(progression["points_per_first_kill"]),
+	)
+	return point_budget - previous_budget
 
 
 func points_spent() -> int:
@@ -125,9 +146,11 @@ func node_definition(talent_id: String) -> Dictionary:
 
 func snapshot() -> Dictionary:
 	return {
+		"maximum_points": maximum_points,
 		"point_budget": point_budget,
 		"points_spent": points_spent(),
 		"points_remaining": points_remaining(),
 		"active_talent_ids": active_talent_ids.duplicate(),
+		"claimed_guard_boss_floors": claimed_guard_boss_floors.duplicate(),
 		"battle_locked": battle_locked,
 	}

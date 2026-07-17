@@ -5,8 +5,10 @@ extends RefCounted
 signal event_emitted(event: Dictionary)
 
 const Repository = preload("res://src/data/game_data_repository.gd")
+const TalentTreeModel = preload("res://src/gameplay/talent_tree_model.gd")
 
 var game_data: GameDataRepository
+var talent_tree = TalentTreeModel.new()
 var highest_unlocked_floor := 1
 var current_floor := 1
 var floor_kill_progress: Dictionary = {}
@@ -21,6 +23,7 @@ var last_stop_reason := ""
 func _init(repository: GameDataRepository = null) -> void:
 	game_data = repository if repository != null else Repository.new()
 	potion_count = int(game_data.first_rift()["potion"]["starting_count"])
+	talent_tree.configure(game_data.talents()["trees"]["fury_warrior"])
 
 
 func can_enter_floor(floor_number: int) -> bool:
@@ -99,12 +102,7 @@ func record_enemy_defeated() -> Dictionary:
 	var kills := int(floor_kill_progress.get(current_floor, 0)) + 1
 	floor_kill_progress[current_floor] = kills
 	var needed := int(game_data.first_rift()["normal_kills_to_clear"])
-	var result := {
-		"floor": current_floor,
-		"kills": kills,
-		"needed": needed,
-		"cleared": false,
-	}
+	var result := {"floor": current_floor, "kills": kills, "needed": needed, "cleared": false}
 	if kills >= needed:
 		cleared_normal_floors.append(current_floor)
 		highest_unlocked_floor = maxi(highest_unlocked_floor, current_floor + 1)
@@ -119,14 +117,20 @@ func record_enemy_defeated() -> Dictionary:
 func record_boss_victory() -> Dictionary:
 	if not auto_farm_running or not is_boss_floor(current_floor):
 		return {}
-	if current_floor not in defeated_boss_floors:
+	var first_clear := current_floor not in defeated_boss_floors
+	if first_clear:
 		defeated_boss_floors.append(current_floor)
+	var talent_points_awarded := talent_tree.record_guard_boss_victory(current_floor) \
+		if first_clear else 0
 	highest_unlocked_floor = maxi(highest_unlocked_floor, current_floor + 1)
 	auto_farm_running = false
 	battle_in_progress = false
 	var result := {
 		"boss_floor": current_floor,
+		"first_clear": first_clear,
 		"unlocked_floor": highest_unlocked_floor,
+		"talent_points_awarded": talent_points_awarded,
+		"total_talent_points": talent_tree.point_budget,
 	}
 	_emit("boss_defeated", result)
 	return result
@@ -136,11 +140,7 @@ func record_player_death(reason := "hero_defeated") -> Dictionary:
 	auto_farm_running = false
 	battle_in_progress = false
 	last_stop_reason = reason
-	var result := {
-		"floor": current_floor,
-		"reason": reason,
-		"progress_preserved": true,
-	}
+	var result := {"floor": current_floor, "reason": reason, "progress_preserved": true}
 	_emit("auto_farm_stopped", result)
 	return result
 
@@ -164,6 +164,7 @@ func snapshot() -> Dictionary:
 		"floor_kill_progress": floor_kill_progress.duplicate(true),
 		"cleared_normal_floors": cleared_normal_floors.duplicate(),
 		"defeated_boss_floors": defeated_boss_floors.duplicate(),
+		"talent_tree": talent_tree.snapshot(),
 		"potion_count": potion_count,
 		"auto_farm_running": auto_farm_running,
 		"battle_in_progress": battle_in_progress,

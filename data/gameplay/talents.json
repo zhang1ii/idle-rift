@@ -1,12 +1,18 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "trees": {
     "fury_warrior": {
       "name": "狂怒战士",
-      "prototype_point_budget": 7,
       "change_only_before_battle": true,
       "free_respec_before_battle": true,
-      "point_source_status": "pending_character_progression",
+      "point_progression": {
+        "source": "guard_boss_first_kill",
+        "first_guard_boss_floor": 5,
+        "guard_boss_interval": 5,
+        "points_per_first_kill": 1,
+        "repeat_kill_points": 0,
+        "maximum_points": 7
+      },
       "branches": [
         {"id": "blood", "name": "血痕", "description": "强化流血、DOT续航和对流血目标的终结能力。"},
         {"id": "fury", "name": "狂潮", "description": "强化怒意生成、爆发窗口和泄怒技能。"},
