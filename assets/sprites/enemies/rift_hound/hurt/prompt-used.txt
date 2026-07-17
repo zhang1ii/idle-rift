@@ -1,1 +1,0 @@
-Rift Hound hurt and recoil animation, four frames in a 2x2 grid. Preserve the cyan spectral armored wolf identity and fixed torso center. Impact compression, recoil, low stagger and recovery without whole-body translation. Pixel art on solid #FF00FF.

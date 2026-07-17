@@ -9,53 +9,16 @@ const HERO_FRAMES := [
 	preload("res://assets/sprites/characters/iron_vow/idle/frame_03.png"),
 	preload("res://assets/sprites/characters/iron_vow/idle/frame_04.png"),
 ]
-const HERO_ATTACK_FRAMES := [
-	preload("res://assets/sprites/characters/iron_vow/attack/attack-1.png"),
-	preload("res://assets/sprites/characters/iron_vow/attack/attack-2.png"),
-	preload("res://assets/sprites/characters/iron_vow/attack/attack-3.png"),
-	preload("res://assets/sprites/characters/iron_vow/attack/attack-4.png"),
-	preload("res://assets/sprites/characters/iron_vow/attack/attack-5.png"),
-	preload("res://assets/sprites/characters/iron_vow/attack/attack-6.png"),
-]
-const HERO_HEAVY_ATTACK_FRAMES := [
-	preload("res://assets/sprites/characters/iron_vow/heavy_attack/attack-1.png"),
-	preload("res://assets/sprites/characters/iron_vow/heavy_attack/attack-2.png"),
-	preload("res://assets/sprites/characters/iron_vow/heavy_attack/attack-3.png"),
-	preload("res://assets/sprites/characters/iron_vow/heavy_attack/attack-4.png"),
-	preload("res://assets/sprites/characters/iron_vow/heavy_attack/attack-5.png"),
-	preload("res://assets/sprites/characters/iron_vow/heavy_attack/attack-6.png"),
-]
 const ENEMY_FRAMES := [
 	preload("res://assets/sprites/enemies/rift_hound/idle/idle-1.png"),
 	preload("res://assets/sprites/enemies/rift_hound/idle/idle-2.png"),
 	preload("res://assets/sprites/enemies/rift_hound/idle/idle-3.png"),
 	preload("res://assets/sprites/enemies/rift_hound/idle/idle-4.png"),
 ]
-const ENEMY_HURT_FRAMES := [
-	preload("res://assets/sprites/enemies/rift_hound/hurt/hurt-1.png"),
-	preload("res://assets/sprites/enemies/rift_hound/hurt/hurt-2.png"),
-	preload("res://assets/sprites/enemies/rift_hound/hurt/hurt-3.png"),
-	preload("res://assets/sprites/enemies/rift_hound/hurt/hurt-4.png"),
-]
-const ENEMY_DEATH_FRAMES := [
-	preload("res://assets/sprites/enemies/rift_hound/death/death-1.png"),
-	preload("res://assets/sprites/enemies/rift_hound/death/death-2.png"),
-	preload("res://assets/sprites/enemies/rift_hound/death/death-3.png"),
-	preload("res://assets/sprites/enemies/rift_hound/death/death-4.png"),
-	preload("res://assets/sprites/enemies/rift_hound/death/death-5.png"),
-	preload("res://assets/sprites/enemies/rift_hound/death/death-6.png"),
-]
-const SLASH_FRAMES := [
-	preload("res://assets/sprites/fx/iron_vow_slash/impact-1.png"),
-	preload("res://assets/sprites/fx/iron_vow_slash/impact-2.png"),
-	preload("res://assets/sprites/fx/iron_vow_slash/impact-3.png"),
-	preload("res://assets/sprites/fx/iron_vow_slash/impact-4.png"),
-]
 
 @onready var world: Node2D = %World
 @onready var hero: AnimatedSprite2D = %Hero
 @onready var enemy: AnimatedSprite2D = %Enemy
-@onready var slash_fx: AnimatedSprite2D = %SlashFx
 @onready var fx: Node2D = %BattleFx
 @onready var hero_health: ProgressBar = %HeroHealth
 @onready var hero_rage: ProgressBar = %HeroRage
@@ -73,20 +36,17 @@ var _hero_origin := Vector2.ZERO
 var _enemy_origin := Vector2.ZERO
 var _world_origin := Vector2.ZERO
 var _shake_tween: Tween
-var _enemy_dying := false
 
 
 func _ready() -> void:
-	_setup_actor_animations()
+	_setup_sprite(hero, HERO_FRAMES, "idle", 7.0)
+	_setup_sprite(enemy, ENEMY_FRAMES, "idle", 6.0)
 	_hero_origin = hero.position
 	_enemy_origin = enemy.position
 	_world_origin = world.position
 	fx.hero_position = hero.position + Vector2(0, -8)
 	fx.enemy_position = enemy.position + Vector2(0, -8)
 	_style_bars()
-	hero.animation_finished.connect(_on_hero_animation_finished)
-	enemy.animation_finished.connect(_on_enemy_animation_finished)
-	slash_fx.animation_finished.connect(func() -> void: slash_fx.visible = false)
 	model.event_emitted.connect(_on_battle_event)
 	model.start(1)
 	_refresh_hud()
@@ -100,41 +60,20 @@ func _process(delta: float) -> void:
 	_refresh_hud()
 
 
-func _setup_actor_animations() -> void:
-	var hero_frames := SpriteFrames.new()
-	_add_animation(hero_frames, "idle", HERO_FRAMES, 7.0, true)
-	_add_animation(hero_frames, "attack", HERO_ATTACK_FRAMES, 12.0, false)
-	_add_animation(hero_frames, "heavy_attack", HERO_HEAVY_ATTACK_FRAMES, 9.5, false)
-	hero.sprite_frames = hero_frames
-	hero.play("idle")
-
-	var enemy_frames := SpriteFrames.new()
-	_add_animation(enemy_frames, "idle", ENEMY_FRAMES, 6.0, true)
-	_add_animation(enemy_frames, "hurt", ENEMY_HURT_FRAMES, 13.0, false)
-	_add_animation(enemy_frames, "death", ENEMY_DEATH_FRAMES, 9.5, false)
-	enemy.sprite_frames = enemy_frames
-	enemy.play("idle")
-
-	var slash_frames := SpriteFrames.new()
-	_add_animation(slash_frames, "slash", SLASH_FRAMES, 16.0, false)
-	slash_fx.sprite_frames = slash_frames
-	slash_fx.visible = false
-
-
-func _add_animation(
-	frames: SpriteFrames,
-	animation_name: String,
+func _setup_sprite(
+	sprite: AnimatedSprite2D,
 	textures: Array,
+	animation_name: String,
 	fps: float,
-	looped: bool,
 ) -> void:
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
+	var frames := SpriteFrames.new()
 	frames.add_animation(animation_name)
 	frames.set_animation_speed(animation_name, fps)
-	frames.set_animation_loop(animation_name, looped)
+	frames.set_animation_loop(animation_name, true)
 	for texture in textures:
 		frames.add_frame(animation_name, texture)
+	sprite.sprite_frames = frames
+	sprite.play(animation_name)
 
 
 func _on_battle_event(event: Dictionary) -> void:
@@ -165,11 +104,9 @@ func _play_skill_cast(event: Dictionary) -> void:
 	match event.skill_id:
 		"rage_builder":
 			skill_detail.text = "撕裂 · 积攒怒意"
-			hero.play("attack")
 			_lunge_hero(125.0, 0.11)
 		"single_spender":
 			skill_detail.text = "倾泻 50 怒意 · 重击"
-			hero.play("heavy_attack")
 			_lunge_hero(145.0, 0.15)
 		"rage_barrier":
 			skill_detail.text = "怒意凝聚为护盾"
@@ -186,7 +123,6 @@ func _lunge_hero(distance: float, duration: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(hero, "position:x", _hero_origin.x + distance, duration) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_interval(0.14)
 	tween.tween_property(hero, "position:x", _hero_origin.x, duration * 1.8) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
@@ -200,19 +136,16 @@ func _play_enemy_hit(event: Dictionary) -> void:
 		# Damage is resolved by the model immediately; presentation waits for the
 		# warrior to cross the arena so contact and impact read as one action.
 		var contact := create_tween()
-		contact.tween_interval(0.30 if strong else 0.21)
+		contact.tween_interval(0.12 if strong else 0.085)
 		contact.tween_callback(_resolve_attack_impact.bind(event.duplicate(true), strong))
 	enemy_health.value = event.health
 
 
 func _resolve_attack_impact(event: Dictionary, strong: bool) -> void:
-	_play_slash_fx(strong)
-	fx.play_impact()
+	fx.play_slash(strong)
 	_hit_stop = 0.085 if strong else 0.045
 	_shake_world(5.0 if strong else 2.5)
-	_pulse_sprite(enemy, Color(1.0, 0.7, 0.66))
-	if event.health > 0.0 and not _enemy_dying:
-		enemy.play("hurt")
+	_pulse_sprite(enemy, Color(1.0, 0.38, 0.28))
 	var recoil := create_tween()
 	recoil.tween_property(enemy, "position:x", _enemy_origin.x + (15.0 if strong else 7.0), 0.06)
 	recoil.tween_property(enemy, "position:x", _enemy_origin.x, 0.18) \
@@ -235,10 +168,7 @@ func _play_rage_change(event: Dictionary) -> void:
 
 
 func _enemy_spawn(event: Dictionary) -> void:
-	_enemy_dying = false
 	enemy.visible = true
-	enemy.rotation = 0.0
-	enemy.play("idle")
 	enemy.position = _enemy_origin + Vector2(35, 0)
 	enemy.modulate = Color(0.25, 0.8, 1.0, 0.0)
 	enemy_name.text = event.name
@@ -251,41 +181,16 @@ func _enemy_spawn(event: Dictionary) -> void:
 
 
 func _play_enemy_defeat(event: Dictionary) -> void:
-	var contact_delay := create_tween()
-	contact_delay.tween_interval(0.31)
-	contact_delay.tween_callback(_begin_enemy_death.bind(event.duplicate(true)))
-
-
-func _begin_enemy_death(event: Dictionary) -> void:
-	_enemy_dying = true
-	enemy.position = _enemy_origin
-	enemy.play("death")
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(enemy, "rotation", 0.18, 0.24)
+	tween.tween_property(enemy, "position:y", _enemy_origin.y + 10.0, 0.24)
+	tween.tween_property(enemy, "modulate:a", 0.0, 0.30)
+	_spawn_loot_beam(event.loot_quality)
 	loot_label.text = "%s装备坠落" % event.loot_quality
-	loot_label.modulate.a = 0.0
+	loot_label.modulate.a = 1.0
 	var fade := create_tween()
-	fade.tween_interval(0.46)
-	fade.tween_callback(_spawn_loot_beam.bind(event.loot_quality))
-	fade.tween_property(loot_label, "modulate:a", 1.0, 0.10)
-	fade.tween_interval(0.42)
-	fade.tween_property(loot_label, "modulate:a", 0.0, 0.28)
-
-
-func _play_slash_fx(strong: bool) -> void:
-	slash_fx.visible = true
-	slash_fx.position = _enemy_origin + Vector2(-28, -10)
-	slash_fx.scale = Vector2.ONE * (1.65 if strong else 1.20)
-	slash_fx.modulate = Color(1.0, 0.72, 0.38) if strong else Color.WHITE
-	slash_fx.play("slash")
-
-
-func _on_hero_animation_finished() -> void:
-	if hero.animation in ["attack", "heavy_attack"]:
-		hero.play("idle")
-
-
-func _on_enemy_animation_finished() -> void:
-	if enemy.animation == "hurt" and not _enemy_dying:
-		enemy.play("idle")
+	fade.tween_interval(0.65)
+	fade.tween_property(loot_label, "modulate:a", 0.0, 0.42)
 
 
 func _spawn_damage_number(

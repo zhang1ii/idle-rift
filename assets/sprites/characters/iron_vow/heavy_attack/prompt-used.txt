@@ -1,1 +1,0 @@
-Iron Vow heavy shield-assisted overhead sword slam, six frames in a 2x3 grid. Preserve the accepted character anchor, charcoal armor, cyan shield inset and grounded scale. Braced anticipation, raised sword, downward drive, low contact, recoil and recovery. Body-only pixel art on solid #FF00FF.

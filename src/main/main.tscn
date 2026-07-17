@@ -63,7 +63,6 @@ color = Color(0.01, 0.015, 0.02, 0.58)
 unique_name_in_owner = true
 position = Vector2(205, 250)
 scale = Vector2(1.65, 1.65)
-flip_h = true
 
 [node name="Enemy" type="AnimatedSprite2D" parent="World"]
 unique_name_in_owner = true
@@ -75,11 +74,6 @@ flip_h = true
 unique_name_in_owner = true
 z_index = 8
 script = ExtResource("3_fx")
-
-[node name="SlashFx" type="AnimatedSprite2D" parent="World"]
-unique_name_in_owner = true
-z_index = 9
-position = Vector2(412, 238)
 
 [node name="EnemyHud" type="Control" parent="."]
 layout_mode = 0
