@@ -8,8 +8,8 @@
     "maximum_attack_speed": 3.0
   },
   "rift": {
-    "kills_per_level": 5,
-    "enemy_rotation_kills": 2,
+    "kills_per_level": 20,
+    "enemy_rotation_kills": 5,
     "enemy_health_base": 25.0,
     "enemy_health_per_level": 0.24,
     "respawn_delay": 0.45,
@@ -24,7 +24,7 @@
     "minimum_interval": 0.65
   },
   "rewards": {
-    "drop_chance": 0.72,
+    "drop_chance": 0.03,
     "gold_base": 2,
     "gold_per_enemy_level": 1
   }

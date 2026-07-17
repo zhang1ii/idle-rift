@@ -7,6 +7,7 @@ const REQUIRED_FILES := {
 	"combat": "combat.json",
 	"enemies": "enemies.json",
 	"equipment": "equipment.json",
+	"first_rift": "first_rift.json",
 }
 
 var _documents: Dictionary = {}
@@ -32,6 +33,17 @@ func enemies() -> Array:
 
 func equipment() -> Dictionary:
 	return _documents["equipment"]
+
+
+func first_rift() -> Dictionary:
+	return _documents["first_rift"]
+
+
+func first_rift_floor(floor_number: int) -> Dictionary:
+	for definition in first_rift()["floors"]:
+		if int(definition["floor"]) == floor_number:
+			return (definition as Dictionary).duplicate(true)
+	return {}
 
 
 func class_definition(class_id: StringName) -> Dictionary:
@@ -74,8 +86,28 @@ func _load_json(file_name: String) -> Dictionary:
 func _validate() -> void:
 	assert(not classes()["classes"].is_empty(), "至少需要一个职业定义。")
 	assert(not enemies().is_empty(), "至少需要一个敌人定义。")
-	assert(not equipment()["slots"].is_empty(), "至少需要一个装备部位。")
+	assert(equipment()["slots"].size() == 13, "正式装备合同必须包含 13 个装备槽。")
+	assert(int(equipment()["slot_count"]) == 13, "装备槽声明必须为 13。")
+	assert(equipment()["rarities"].size() == 5, "正式装备合同必须包含 5 个品质。")
 	var total_weight := 0.0
 	for rarity in equipment()["rarities"]:
 		total_weight += float(rarity["weight"])
+		if String(rarity["id"]) == "common":
+			assert(int(rarity["affix_min"]) == 0 and int(rarity["affix_max"]) == 0, "白装不能带词缀。")
+		else:
+			assert(int(rarity["affix_min"]) == 2 and int(rarity["affix_max"]) == 2, "非白装必须固定 2 条词缀。")
 	assert(absf(total_weight - 1.0) < 0.001, "装备品质权重之和必须为 1。")
+
+	var rift := first_rift()
+	assert(int(rift["normal_kills_to_clear"]) > 0, "普通层通关击杀数必须大于 0。")
+	assert(float(rift["equipment_drop_chance"]) > 0.0, "装备掉率必须大于 0。")
+	assert(float(rift["equipment_drop_chance"]) <= 1.0, "装备掉率不能超过 100%。")
+	assert(is_equal_approx(
+		float(combat()["rewards"]["drop_chance"]),
+		float(rift["equipment_drop_chance"]),
+	), "战斗掉率必须与第一裂隙合同一致。")
+	assert(float(rift["offline_efficiency"]) > 0.0, "离线效率必须大于 0。")
+	assert(float(rift["offline_efficiency"]) <= 1.0, "离线效率不能超过在线效率。")
+	assert(rift["floors"].size() >= 5, "第一裂隙至少需要 1～5 层定义。")
+	for floor_number in range(1, 6):
+		assert(not first_rift_floor(floor_number).is_empty(), "缺少第 %d 层定义。" % floor_number)

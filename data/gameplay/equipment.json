@@ -1,27 +1,44 @@
 {
+  "schema_version": 2,
+  "slot_count": 13,
   "scaling": {
     "base_stat_per_level": 0.12,
     "affix_per_level": 0.08
   },
   "rarities": [
-    {"id": "common", "enum": 0, "prefix": "朴素的", "color": "c6c9ce", "weight": 0.55, "affix_min": 0, "affix_max": 0},
-    {"id": "magic", "enum": 1, "prefix": "魔能", "color": "69a7ff", "weight": 0.30, "affix_min": 1, "affix_max": 2},
-    {"id": "rare", "enum": 2, "prefix": "辉耀", "color": "ffd36a", "weight": 0.15, "affix_min": 3, "affix_max": 3}
+    {"id": "common", "enum": 0, "prefix": "朴素的", "color": "c6c9ce", "weight": 0.45, "affix_min": 0, "affix_max": 0},
+    {"id": "uncommon", "enum": 1, "prefix": "优秀的", "color": "69d17d", "weight": 0.30, "affix_min": 2, "affix_max": 2},
+    {"id": "rare", "enum": 2, "prefix": "稀有的", "color": "69a7ff", "weight": 0.17, "affix_min": 2, "affix_max": 2},
+    {"id": "epic", "enum": 3, "prefix": "史诗", "color": "b878ff", "weight": 0.07, "affix_min": 2, "affix_max": 2},
+    {"id": "legendary", "enum": 4, "prefix": "传说", "color": "ff9d3d", "weight": 0.01, "affix_min": 2, "affix_max": 2}
   ],
   "slots": [
-    {"id": "weapon", "enum": 0, "name": "裂隙武器", "base_stats": [{"stat": "attack", "minimum": 4.0, "maximum": 7.0}]},
-    {"id": "helm", "enum": 1, "name": "守望头盔", "base_stats": [{"stat": "health", "minimum": 10.0, "maximum": 16.0}]},
-    {"id": "armor", "enum": 2, "name": "远征胸甲", "base_stats": [{"stat": "health", "minimum": 14.0, "maximum": 22.0}, {"stat": "armor", "minimum": 2.0, "maximum": 5.0}]},
-    {"id": "ring", "enum": 3, "name": "余烬戒指", "base_stats": [{"stat": "critical_chance", "minimum": 2.0, "maximum": 4.0}]},
-    {"id": "amulet", "enum": 4, "name": "回响护符", "base_stats": [{"stat": "attack_speed", "minimum": 3.0, "maximum": 6.0}]}
+    {"id": "weapon", "enum": 0, "name": "裂隙武器", "group": "weapon", "set_eligible": false, "base_stats": [{"stat": "attack", "minimum": 4.0, "maximum": 7.0}]},
+    {"id": "head", "enum": 1, "name": "头盔", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "health", "minimum": 10.0, "maximum": 16.0}]},
+    {"id": "shoulders", "enum": 2, "name": "肩甲", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "health", "minimum": 8.0, "maximum": 13.0}, {"stat": "armor", "minimum": 1.0, "maximum": 3.0}]},
+    {"id": "chest", "enum": 3, "name": "胸甲", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "health", "minimum": 14.0, "maximum": 22.0}, {"stat": "armor", "minimum": 2.0, "maximum": 5.0}]},
+    {"id": "wrists", "enum": 4, "name": "护腕", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "health", "minimum": 6.0, "maximum": 10.0}, {"stat": "armor", "minimum": 1.0, "maximum": 2.0}]},
+    {"id": "hands", "enum": 5, "name": "手套", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "attack", "minimum": 1.0, "maximum": 3.0}, {"stat": "health", "minimum": 7.0, "maximum": 11.0}]},
+    {"id": "waist", "enum": 6, "name": "腰带", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "health", "minimum": 8.0, "maximum": 12.0}, {"stat": "armor", "minimum": 1.0, "maximum": 3.0}]},
+    {"id": "legs", "enum": 7, "name": "腿甲", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "health", "minimum": 13.0, "maximum": 20.0}, {"stat": "armor", "minimum": 2.0, "maximum": 4.0}]},
+    {"id": "feet", "enum": 8, "name": "鞋子", "group": "armor", "set_eligible": true, "base_stats": [{"stat": "health", "minimum": 7.0, "maximum": 12.0}, {"stat": "attack_speed", "minimum": 1.0, "maximum": 3.0}]},
+    {"id": "ring_1", "enum": 9, "name": "戒指 I", "group": "ring", "set_eligible": false, "can_have_special_effect": true, "base_stats": [{"stat": "critical_chance", "minimum": 2.0, "maximum": 4.0}]},
+    {"id": "ring_2", "enum": 10, "name": "戒指 II", "group": "ring", "set_eligible": false, "can_have_special_effect": true, "base_stats": [{"stat": "critical_chance", "minimum": 2.0, "maximum": 4.0}]},
+    {"id": "trinket_1", "enum": 11, "name": "饰品 I", "group": "trinket", "set_eligible": false, "can_have_special_effect": true, "base_stats": [{"stat": "attack_speed", "minimum": 3.0, "maximum": 6.0}]},
+    {"id": "trinket_2", "enum": 12, "name": "饰品 II", "group": "trinket", "set_eligible": false, "can_have_special_effect": true, "base_stats": [{"stat": "attack_speed", "minimum": 3.0, "maximum": 6.0}]}
   ],
   "affixes": [
     {"stat": "attack", "name": "进攻", "minimum": 2.0, "maximum": 5.0},
     {"stat": "health", "name": "活力", "minimum": 8.0, "maximum": 18.0},
     {"stat": "armor", "name": "坚韧", "minimum": 2.0, "maximum": 7.0},
-    {"stat": "attack_speed", "name": "迅捷", "minimum": 3.0, "maximum": 9.0},
-    {"stat": "critical_chance", "name": "锐利", "minimum": 2.0, "maximum": 6.0},
-    {"stat": "block_chance", "name": "招架", "minimum": 3.0, "maximum": 8.0},
-    {"stat": "counter_damage", "name": "报偿", "minimum": 8.0, "maximum": 18.0}
+    {"stat": "attack_speed", "name": "急速", "minimum": 3.0, "maximum": 9.0},
+    {"stat": "critical_chance", "name": "暴击", "minimum": 2.0, "maximum": 6.0},
+    {"stat": "mastery", "name": "精通", "minimum": 2.0, "maximum": 7.0},
+    {"stat": "versatility", "name": "全能", "minimum": 2.0, "maximum": 6.0},
+    {"stat": "block_chance", "name": "格挡", "minimum": 3.0, "maximum": 8.0},
+    {"stat": "counter_damage", "name": "反击", "minimum": 8.0, "maximum": 18.0},
+    {"stat": "kill_heal", "name": "收割", "minimum": 1.0, "maximum": 4.0},
+    {"stat": "damage_leech", "name": "汲取", "minimum": 1.0, "maximum": 3.0},
+    {"stat": "cooldown_reduction", "name": "流转", "minimum": 2.0, "maximum": 6.0}
   ]
 }

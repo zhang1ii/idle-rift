@@ -7,16 +7,26 @@ static var _repository := Repository.new() as GameDataRepository
 
 enum Slot {
 	WEAPON,
-	HELM,
-	ARMOR,
-	RING,
-	AMULET,
+	HEAD,
+	SHOULDERS,
+	CHEST,
+	WRISTS,
+	HANDS,
+	WAIST,
+	LEGS,
+	FEET,
+	RING_1,
+	RING_2,
+	TRINKET_1,
+	TRINKET_2,
 }
 
 enum Rarity {
 	COMMON,
-	MAGIC,
+	UNCOMMON,
 	RARE,
+	EPIC,
+	LEGENDARY,
 }
 
 var id: String
@@ -25,6 +35,9 @@ var rarity: Rarity
 var item_level: int
 var base_stats: Dictionary = {}
 var affixes: Array[Dictionary] = []
+var special_effect := ""
+var set_id := ""
+var set_power := 0.0
 
 
 func total_stat(stat_name: StringName) -> float:
@@ -42,8 +55,13 @@ func power_score() -> int:
 		+ total_stat(&"armor") * 1.4
 		+ total_stat(&"attack_speed") * 1.8
 		+ total_stat(&"critical_chance") * 2.2
+		+ total_stat(&"mastery") * 1.6
+		+ total_stat(&"versatility") * 1.7
 		+ total_stat(&"block_chance") * 2.0
 		+ total_stat(&"counter_damage") * 1.5
+		+ total_stat(&"kill_heal") * 2.0
+		+ total_stat(&"damage_leech") * 2.4
+		+ total_stat(&"cooldown_reduction") * 1.8
 	)
 
 
@@ -57,6 +75,8 @@ func short_description() -> String:
 		lines.append(_format_stat(stat_name, float(base_stats[stat_name])))
 	for affix in affixes:
 		lines.append(_format_stat(affix["stat"], float(affix["value"])))
+	if not special_effect.is_empty():
+		lines.append(special_effect)
 	return "\n".join(lines)
 
 
@@ -81,17 +101,31 @@ static func stat_label(stat_name: StringName) -> String:
 		&"armor":
 			return "护甲"
 		&"attack_speed":
-			return "攻速"
+			return "急速"
 		&"critical_chance":
 			return "暴击"
+		&"mastery":
+			return "精通"
+		&"versatility":
+			return "全能"
 		&"block_chance":
 			return "格挡"
 		&"counter_damage":
 			return "反击伤害"
+		&"kill_heal":
+			return "击杀恢复"
+		&"damage_leech":
+			return "伤害吸血"
+		&"cooldown_reduction":
+			return "冷却缩减"
 	return String(stat_name)
 
 
 func _format_stat(stat_name: StringName, value: float) -> String:
-	if stat_name in [&"attack_speed", &"critical_chance", &"block_chance", &"counter_damage"]:
+	if stat_name in [
+		&"attack_speed", &"critical_chance", &"mastery", &"versatility",
+		&"block_chance", &"counter_damage", &"kill_heal", &"damage_leech",
+		&"cooldown_reduction",
+	]:
 		return "+%d%% %s" % [roundi(value), stat_label(stat_name)]
 	return "+%d %s" % [roundi(value), stat_label(stat_name)]
