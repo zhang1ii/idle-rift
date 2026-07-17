@@ -3,7 +3,7 @@ extends SceneTree
 
 const FuryRules = preload("res://src/gameplay/fury_rules.gd")
 const BossRules = preload("res://src/gameplay/boss_rules.gd")
-const MainScene = preload("res://src/main/main.tscn")
+const MainScene = preload("res://src/main/combat_prototype.tscn")
 
 
 func _init() -> void:
