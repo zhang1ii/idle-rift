@@ -1,834 +1,212 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=6 format=3]
 
-[ext_resource path="res://src/main/main.gd" type="Script" id="1_main"]
-[ext_resource path="res://assets/fonts/NotoSansSC-IdleRift.ttf" type="FontFile" id="2_font"]
-[ext_resource path="res://assets/backgrounds/rift_causeway.png" type="Texture2D" id="3_bg"]
-[ext_resource path="res://assets/sprites/characters/iron_vow/idle/frame_01.png" type="Texture2D" id="4_hero"]
-[ext_resource path="res://assets/sprites/enemies/rift_hound/idle/idle-1.png" type="Texture2D" id="5_enemy"]
-[ext_resource path="res://assets/sprites/items/settlement/sheet-1.png" type="Texture2D" id="6_helm"]
-[ext_resource path="res://assets/sprites/items/settlement/sheet-2.png" type="Texture2D" id="7_armor"]
-[ext_resource path="res://assets/sprites/items/settlement/sheet-3.png" type="Texture2D" id="8_weapon"]
-[ext_resource path="res://assets/sprites/items/settlement/sheet-4.png" type="Texture2D" id="9_gloves"]
-[ext_resource path="res://assets/sprites/items/settlement/sheet-5.png" type="Texture2D" id="10_amulet"]
+[ext_resource path="res://src/main/battle_stage.gd" type="Script" id="1_stage"]
+[ext_resource path="res://assets/backgrounds/rift_causeway.png" type="Texture2D" id="2_bg"]
+[ext_resource path="res://src/combat/battle_fx_layer.gd" type="Script" id="3_fx"]
+[ext_resource path="res://assets/fonts/NotoSansSC-IdleRift.ttf" type="FontFile" id="4_font"]
 
-[sub_resource type="Theme" id="ThemeInterface"]
-default_font = ExtResource("2_font")
-default_font_size = 14
+[sub_resource type="Gradient" id="Gradient_vignette"]
+colors = PackedColorArray(0.01, 0.015, 0.025, 0.12, 0.01, 0.015, 0.025, 0.82)
 
-[sub_resource type="StyleBoxFlat" id="StyleDock"]
-bg_color = Color(0.025, 0.035, 0.047, 0.98)
-border_width_top = 2
-border_color = Color(0.2, 0.55, 0.58, 0.82)
-shadow_color = Color(0, 0, 0, 0.7)
-shadow_size = 10
-
-[sub_resource type="StyleBoxFlat" id="StyleWindow"]
-bg_color = Color(0.035, 0.045, 0.058, 0.985)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.28, 0.58, 0.61, 0.9)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0, 0, 0, 0.8)
-shadow_size = 18
-
-[sub_resource type="StyleBoxFlat" id="StyleLoot"]
-bg_color = Color(0.055, 0.067, 0.082, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.22, 0.26, 0.3, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="StyleMythic"]
-bg_color = Color(0.11, 0.06, 0.03, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.94, 0.48, 0.13, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-shadow_color = Color(0.9, 0.25, 0.04, 0.28)
-shadow_size = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleButton"]
-bg_color = Color(0.09, 0.12, 0.15, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.24, 0.42, 0.45, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-content_margin_left = 12.0
-content_margin_right = 12.0
-
-[sub_resource type="StyleBoxFlat" id="StyleButtonHover"]
-bg_color = Color(0.12, 0.22, 0.24, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.34, 0.72, 0.72, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-content_margin_left = 12.0
-content_margin_right = 12.0
-
-[sub_resource type="StyleBoxFlat" id="StylePrimary"]
-bg_color = Color(0.73, 0.3, 0.08, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.62, 0.18, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-content_margin_left = 16.0
-content_margin_right = 16.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBarBg"]
-bg_color = Color(0.015, 0.02, 0.027, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleHealth"]
-bg_color = Color(0.18, 0.65, 0.49, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleGuard"]
-bg_color = Color(0.15, 0.54, 0.68, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleEnemyHealth"]
-bg_color = Color(0.76, 0.18, 0.13, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[node name="Main" type="Control"]
+[node name="BattleStage" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = SubResource("ThemeInterface")
-script = ExtResource("1_main")
+theme_override_fonts/font = ExtResource("4_font")
+script = ExtResource("1_stage")
 
-[node name="DesktopVoid" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.008, 0.012, 0.018, 1)
-
-[node name="TopChrome" type="MarginContainer" parent="."]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 48.0
-grow_horizontal = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 20
-
-[node name="Row" type="HBoxContainer" parent="TopChrome"]
-layout_mode = 2
-
-[node name="Brand" type="Label" parent="TopChrome/Row"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.82, 0.67, 0.35, 1)
-theme_override_font_sizes/font_size = 13
-text = "IDLE RIFT  ·  灰烬远征"
-
-[node name="Spacer" type="Control" parent="TopChrome/Row"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="RiftLabel" type="Label" parent="TopChrome/Row"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.72, 0.74, 1)
-text = "裂隙 01"
-
-[node name="Gap" type="Control" parent="TopChrome/Row"]
-custom_minimum_size = Vector2(16, 0)
-layout_mode = 2
-
-[node name="GoldLabel" type="Label" parent="TopChrome/Row"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.72, 0.25, 1)
-text = "0 金币"
-
-[node name="SettlementShade" type="ColorRect" parent="."]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 0.5)
-
-[node name="SettlementPanel" type="PanelContainer" parent="."]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(660, 344)
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -330.0
-offset_top = -206.0
-offset_right = 330.0
-offset_bottom = 138.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleWindow")
-
-[node name="Margin" type="MarginContainer" parent="SettlementPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 20
-
-[node name="VBox" type="VBoxContainer" parent="SettlementPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Header" type="HBoxContainer" parent="SettlementPanel/Margin/VBox"]
-layout_mode = 2
-
-[node name="TitleBlock" type="VBoxContainer" parent="SettlementPanel/Margin/VBox/Header"]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="Title" type="Label" parent="SettlementPanel/Margin/VBox/Header/TitleBlock"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.78, 0.5, 1)
-theme_override_font_sizes/font_size = 26
-text = "远征归来"
-
-[node name="Subtitle" type="Label" parent="SettlementPanel/Margin/VBox/Header/TitleBlock"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.48, 0.58, 0.61, 1)
-theme_override_font_sizes/font_size = 12
-text = "离线 6 小时 24 分 · 已在本地完成结算"
-
-[node name="HeaderSpacer" type="Control" parent="SettlementPanel/Margin/VBox/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Summary" type="VBoxContainer" parent="SettlementPanel/Margin/VBox/Header"]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="Found" type="Label" parent="SettlementPanel/Margin/VBox/Header/Summary"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.79, 0.78, 1)
-theme_override_font_sizes/font_size = 12
-text = "获得 23 件装备"
-horizontal_alignment = 2
-
-[node name="Mythic" type="Label" parent="SettlementPanel/Margin/VBox/Header/Summary"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.5, 0.15, 1)
-theme_override_font_sizes/font_size = 14
-text = "发现 1 件神话"
-horizontal_alignment = 2
-
-[node name="Rule" type="HSeparator" parent="SettlementPanel/Margin/VBox"]
-layout_mode = 2
-modulate = Color(0.24, 0.48, 0.5, 1)
-
-[node name="LootRow" type="HBoxContainer" parent="SettlementPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 158)
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="Loot1" type="PanelContainer" parent="SettlementPanel/Margin/VBox/LootRow"]
-custom_minimum_size = Vector2(108, 144)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleLoot")
-
-[node name="Body" type="VBoxContainer" parent="SettlementPanel/Margin/VBox/LootRow/Loot1"]
-layout_mode = 2
-theme_override_constants/separation = 4
-alignment = 1
-
-[node name="Icon" type="TextureRect" parent="SettlementPanel/Margin/VBox/LootRow/Loot1/Body"]
-custom_minimum_size = Vector2(64, 72)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-texture = ExtResource("6_helm")
-
-[node name="Name" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot1/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.78, 0.82, 1)
-theme_override_font_sizes/font_size = 11
-text = "守望头盔"
-horizontal_alignment = 1
-
-[node name="Power" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot1/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.43, 0.66, 0.78, 1)
-theme_override_font_sizes/font_size = 10
-text = "战力 142"
-horizontal_alignment = 1
-
-[node name="Loot2" type="PanelContainer" parent="SettlementPanel/Margin/VBox/LootRow"]
-custom_minimum_size = Vector2(108, 144)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleLoot")
-
-[node name="Body" type="VBoxContainer" parent="SettlementPanel/Margin/VBox/LootRow/Loot2"]
-layout_mode = 2
-theme_override_constants/separation = 4
-alignment = 1
-
-[node name="Icon" type="TextureRect" parent="SettlementPanel/Margin/VBox/LootRow/Loot2/Body"]
-custom_minimum_size = Vector2(64, 72)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-texture = ExtResource("7_armor")
-
-[node name="Name" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot2/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.78, 0.82, 1)
-theme_override_font_sizes/font_size = 11
-text = "远征胸甲"
-horizontal_alignment = 1
-
-[node name="Power" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot2/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.43, 0.66, 0.78, 1)
-theme_override_font_sizes/font_size = 10
-text = "战力 187"
-horizontal_alignment = 1
-
-[node name="Loot3" type="PanelContainer" parent="SettlementPanel/Margin/VBox/LootRow"]
-custom_minimum_size = Vector2(128, 158)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleMythic")
-
-[node name="Body" type="VBoxContainer" parent="SettlementPanel/Margin/VBox/LootRow/Loot3"]
-layout_mode = 2
-theme_override_constants/separation = 3
-alignment = 1
-
-[node name="Rarity" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot3/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.47, 0.12, 1)
-theme_override_font_sizes/font_size = 11
-text = "神话 · 远古"
-horizontal_alignment = 1
-
-[node name="Icon" type="TextureRect" parent="SettlementPanel/Margin/VBox/LootRow/Loot3/Body"]
-custom_minimum_size = Vector2(72, 76)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-texture = ExtResource("8_weapon")
-
-[node name="Name" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot3/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.28, 1)
-theme_override_font_sizes/font_size = 12
-text = "裂界者"
-horizontal_alignment = 1
-
-[node name="Power" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot3/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.48, 0.14, 1)
-theme_override_font_sizes/font_size = 11
-text = "战力 431  ↑ 96"
-horizontal_alignment = 1
-
-[node name="Loot4" type="PanelContainer" parent="SettlementPanel/Margin/VBox/LootRow"]
-custom_minimum_size = Vector2(108, 144)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleLoot")
-
-[node name="Body" type="VBoxContainer" parent="SettlementPanel/Margin/VBox/LootRow/Loot4"]
-layout_mode = 2
-theme_override_constants/separation = 4
-alignment = 1
-
-[node name="Icon" type="TextureRect" parent="SettlementPanel/Margin/VBox/LootRow/Loot4/Body"]
-custom_minimum_size = Vector2(64, 72)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-texture = ExtResource("9_gloves")
-
-[node name="Name" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot4/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.78, 0.82, 1)
-theme_override_font_sizes/font_size = 11
-text = "报偿手甲"
-horizontal_alignment = 1
-
-[node name="Power" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot4/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.43, 0.66, 0.78, 1)
-theme_override_font_sizes/font_size = 10
-text = "战力 156"
-horizontal_alignment = 1
-
-[node name="Loot5" type="PanelContainer" parent="SettlementPanel/Margin/VBox/LootRow"]
-custom_minimum_size = Vector2(108, 144)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleLoot")
-
-[node name="Body" type="VBoxContainer" parent="SettlementPanel/Margin/VBox/LootRow/Loot5"]
-layout_mode = 2
-theme_override_constants/separation = 4
-alignment = 1
-
-[node name="Icon" type="TextureRect" parent="SettlementPanel/Margin/VBox/LootRow/Loot5/Body"]
-custom_minimum_size = Vector2(64, 72)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-texture = ExtResource("10_amulet")
-
-[node name="Name" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot5/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.78, 0.82, 1)
-theme_override_font_sizes/font_size = 11
-text = "回响护符"
-horizontal_alignment = 1
-
-[node name="Power" type="Label" parent="SettlementPanel/Margin/VBox/LootRow/Loot5/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.43, 0.66, 0.78, 1)
-theme_override_font_sizes/font_size = 10
-text = "战力 204"
-horizontal_alignment = 1
-
-[node name="Footer" type="HBoxContainer" parent="SettlementPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="SetProgress" type="Label" parent="SettlementPanel/Margin/VBox/Footer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.68, 0.68, 1)
-theme_override_font_sizes/font_size = 12
-text = "守望者套装  2 / 4"
-vertical_alignment = 1
-
-[node name="Salvaged" type="Label" parent="SettlementPanel/Margin/VBox/Footer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.42, 0.5, 0.52, 1)
-theme_override_font_sizes/font_size = 11
-text = "自动分解 17 件"
-vertical_alignment = 1
-
-[node name="FooterSpacer" type="Control" parent="SettlementPanel/Margin/VBox/Footer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="KeepFarmingButton" type="Button" parent="SettlementPanel/Margin/VBox/Footer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(112, 36)
-layout_mode = 2
-theme_override_styles/normal = SubResource("StyleButton")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "继续挂机"
-
-[node name="BestDropButton" type="Button" parent="SettlementPanel/Margin/VBox/Footer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(132, 36)
-layout_mode = 2
-theme_override_styles/normal = SubResource("StylePrimary")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "查看最佳掉落"
-
-[node name="ManagementPanel" type="PanelContainer" parent="."]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(620, 316)
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -310.0
-offset_top = -192.0
-offset_right = 310.0
-offset_bottom = 124.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleWindow")
-
-[node name="Margin" type="MarginContainer" parent="ManagementPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 16
-
-[node name="VBox" type="VBoxContainer" parent="ManagementPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Header" type="HBoxContainer" parent="ManagementPanel/Margin/VBox"]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="ManagementPanel/Margin/VBox/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.88, 0.73, 0.43, 1)
-theme_override_font_sizes/font_size = 20
-text = "战利品整备"
-
-[node name="Spacer" type="Control" parent="ManagementPanel/Margin/VBox/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Hint" type="Label" parent="ManagementPanel/Margin/VBox/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.43, 0.55, 0.57, 1)
-theme_override_font_sizes/font_size = 11
-text = "战斗仍在继续"
-vertical_alignment = 1
-
-[node name="Main" type="HBoxContainer" parent="ManagementPanel/Margin/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 16
-
-[node name="InventoryList" type="ItemList" parent="ManagementPanel/Margin/VBox/Main"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(280, 0)
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 12
-allow_reselect = true
-
-[node name="Detail" type="VBoxContainer" parent="ManagementPanel/Margin/VBox/Main"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 12
-
-[node name="ItemDetail" type="Label" parent="ManagementPanel/Margin/VBox/Main/Detail"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.68, 0.73, 0.74, 1)
-theme_override_font_sizes/font_size = 12
-text = "等待装备掉落……"
-autowrap_mode = 2
-
-[node name="EquipButton" type="Button" parent="ManagementPanel/Margin/VBox/Main/Detail"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-disabled = true
-theme_override_styles/normal = SubResource("StylePrimary")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "装备选中物品"
-
-[node name="EquippedLabel" type="Label" parent="ManagementPanel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.41, 0.51, 0.53, 1)
-theme_override_font_sizes/font_size = 10
-text = "裂隙武器：空 · 守望头盔：空 · 远征胸甲：空 · 余烬戒指：空 · 回响护符：空"
-text_overrun_behavior = 3
-
-[node name="BattleDock" type="PanelContainer" parent="."]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 160)
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -160.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleDock")
-
-[node name="BattleBackground" type="TextureRect" parent="BattleDock"]
-layout_mode = 2
-texture = ExtResource("3_bg")
+texture = ExtResource("2_bg")
 expand_mode = 1
 stretch_mode = 6
-modulate = Color(0.62, 0.68, 0.72, 1)
+
+[node name="Atmosphere" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
+color = Color(0.015, 0.035, 0.06, 0.28)
 
-[node name="Shade" type="ColorRect" parent="BattleDock"]
-layout_mode = 2
+[node name="TopShade" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 74.0
 mouse_filter = 2
-color = Color(0.01, 0.02, 0.026, 0.34)
+color = Color(0.01, 0.015, 0.025, 0.72)
 
-[node name="Margin" type="MarginContainer" parent="BattleDock"]
-layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 8
-
-[node name="Row" type="HBoxContainer" parent="BattleDock/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="HeroSprite" type="TextureRect" parent="BattleDock/Margin/Row"]
+[node name="World" type="Node2D" parent="."]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(112, 128)
-layout_mode = 2
-texture_filter = 1
-texture = ExtResource("4_hero")
-expand_mode = 1
-stretch_mode = 5
 
-[node name="HeroInfo" type="VBoxContainer" parent="BattleDock/Margin/Row"]
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 2
-theme_override_constants/separation = 5
-alignment = 1
+[node name="GroundShadowHero" type="Polygon2D" parent="World"]
+position = Vector2(205, 286)
+polygon = PackedVector2Array(-33, 0, -22, -5, 22, -5, 33, 0, 22, 5, -22, 5)
+color = Color(0.01, 0.015, 0.02, 0.55)
 
-[node name="ClassName" type="Label" parent="BattleDock/Margin/Row/HeroInfo"]
+[node name="GroundShadowEnemy" type="Polygon2D" parent="World"]
+position = Vector2(440, 286)
+polygon = PackedVector2Array(-40, 0, -28, -6, 28, -6, 40, 0, 28, 6, -28, 6)
+color = Color(0.01, 0.015, 0.02, 0.58)
+
+[node name="Hero" type="AnimatedSprite2D" parent="World"]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.43, 0.78, 0.84, 1)
+position = Vector2(205, 250)
+scale = Vector2(1.65, 1.65)
+
+[node name="Enemy" type="AnimatedSprite2D" parent="World"]
+unique_name_in_owner = true
+position = Vector2(440, 248)
+scale = Vector2(1.45, 1.45)
+flip_h = true
+
+[node name="BattleFx" type="Node2D" parent="World"]
+unique_name_in_owner = true
+z_index = 8
+script = ExtResource("3_fx")
+
+[node name="EnemyHud" type="Control" parent="."]
+layout_mode = 0
+offset_left = 365.0
+offset_top = 95.0
+offset_right = 520.0
+offset_bottom = 132.0
+
+[node name="EnemyName" type="Label" parent="EnemyHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 155.0
+offset_bottom = 18.0
+theme_override_colors/font_color = Color(0.83, 0.88, 0.92, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 12
-text = "铁誓卫"
-
-[node name="HeroName" type="Label" parent="BattleDock/Margin/Row/HeroInfo"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.86, 1)
-theme_override_font_sizes/font_size = 18
-text = "无名守望者"
-
-[node name="HeroHealth" type="ProgressBar" parent="BattleDock/Margin/Row/HeroInfo"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 16)
-layout_mode = 2
-show_percentage = false
-theme_override_styles/background = SubResource("StyleBarBg")
-theme_override_styles/fill = SubResource("StyleHealth")
-
-[node name="Value" type="Label" parent="BattleDock/Margin/Row/HeroInfo/HeroHealth"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 10
-text = "100 / 100"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ClassResource" type="ProgressBar" parent="BattleDock/Margin/Row/HeroInfo"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 12)
-layout_mode = 2
-show_percentage = false
-theme_override_styles/background = SubResource("StyleBarBg")
-theme_override_styles/fill = SubResource("StyleGuard")
-
-[node name="Value" type="Label" parent="BattleDock/Margin/Row/HeroInfo/ClassResource"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 9
-text = "守势 0 / 100"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="HeroStats" type="Label" parent="BattleDock/Margin/Row/HeroInfo"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.67, 0.68, 1)
-theme_override_font_sizes/font_size = 10
-text = "伤害 8 · 护甲 0 · 格挡 22%"
-
-[node name="CombatCenter" type="VBoxContainer" parent="BattleDock/Margin/Row"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
-alignment = 1
-
-[node name="Stage" type="Label" parent="BattleDock/Margin/Row/CombatCenter"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.69, 0.68, 1)
-theme_override_font_sizes/font_size = 11
-text = "破碎回廊 · 自动战斗"
-horizontal_alignment = 1
-
-[node name="BattleLog" type="RichTextLabel" parent="BattleDock/Margin/Row/CombatCenter"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 54)
-layout_mode = 2
-theme_override_colors/default_color = Color(0.7, 0.74, 0.72, 1)
-theme_override_font_sizes/normal_font_size = 11
-bbcode_enabled = true
-fit_content = false
-scroll_active = false
-
-[node name="Bottom" type="HBoxContainer" parent="BattleDock/Margin/Row/CombatCenter"]
-layout_mode = 2
-
-[node name="EfficiencyLabel" type="Label" parent="BattleDock/Margin/Row/CombatCenter/Bottom"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.42, 0.75, 0.66, 1)
-theme_override_font_sizes/font_size = 10
-text = "0.0 击杀/分钟"
-
-[node name="Spacer" type="Control" parent="BattleDock/Margin/Row/CombatCenter/Bottom"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="SpeedButton" type="Button" parent="BattleDock/Margin/Row/CombatCenter/Bottom"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(52, 30)
-layout_mode = 2
-theme_override_styles/normal = SubResource("StyleButton")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "1×"
-
-[node name="PauseButton" type="Button" parent="BattleDock/Margin/Row/CombatCenter/Bottom"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(68, 30)
-layout_mode = 2
-theme_override_styles/normal = SubResource("StyleButton")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "暂停"
-
-[node name="EnemyInfo" type="VBoxContainer" parent="BattleDock/Margin/Row"]
-custom_minimum_size = Vector2(188, 0)
-layout_mode = 2
-theme_override_constants/separation = 5
-alignment = 1
-
-[node name="EnemyName" type="Label" parent="BattleDock/Margin/Row/EnemyInfo"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.94, 0.56, 0.43, 1)
-theme_override_font_sizes/font_size = 16
 text = "裂隙猎犬"
 horizontal_alignment = 1
 
-[node name="EnemyHealth" type="ProgressBar" parent="BattleDock/Margin/Row/EnemyInfo"]
+[node name="EnemyHealth" type="ProgressBar" parent="EnemyHud"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 16)
-layout_mode = 2
+layout_mode = 0
+offset_top = 22.0
+offset_right = 155.0
+offset_bottom = 29.0
 show_percentage = false
-theme_override_styles/background = SubResource("StyleBarBg")
-theme_override_styles/fill = SubResource("StyleEnemyHealth")
 
-[node name="Value" type="Label" parent="BattleDock/Margin/Row/EnemyInfo/EnemyHealth"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 10
-text = "31 / 31"
+[node name="FloorLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 18.0
+offset_top = 13.0
+offset_right = 135.0
+offset_bottom = 38.0
+theme_override_colors/font_color = Color(0.93, 0.74, 0.32, 1)
+theme_override_font_sizes/font_size = 17
+text = "裂隙 01"
+
+[node name="KillLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 18.0
+offset_top = 39.0
+offset_right = 135.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(0.57, 0.66, 0.73, 1)
+theme_override_font_sizes/font_size = 11
+text = "讨伐 0"
+
+[node name="ModeLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 500.0
+offset_top = 18.0
+offset_right = 622.0
+offset_bottom = 39.0
+theme_override_colors/font_color = Color(0.47, 0.6, 0.68, 1)
+theme_override_font_sizes/font_size = 11
+text = "自动战斗中"
+horizontal_alignment = 2
+
+[node name="SkillReadout" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 16.0
+offset_right = 420.0
+offset_bottom = 63.0
+theme_override_constants/separation = 0
+
+[node name="SkillName" type="Label" parent="SkillReadout"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.34, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 18
+text = "准备战斗"
 horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="EnemyStats" type="Label" parent="BattleDock/Margin/Row/EnemyInfo"]
+[node name="SkillDetail" type="Label" parent="SkillReadout"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.61, 0.58, 0.56, 1)
+theme_override_colors/font_color = Color(0.68, 0.76, 0.8, 1)
 theme_override_font_sizes/font_size = 10
-text = "等级 1 · 已击杀 0"
+text = "自动选择可用技能"
 horizontal_alignment = 1
 
-[node name="EnemySprite" type="TextureRect" parent="BattleDock/Margin/Row"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(128, 128)
-layout_mode = 2
-texture_filter = 1
-texture = ExtResource("5_enemy")
-expand_mode = 1
-stretch_mode = 5
+[node name="HeroHud" type="Control" parent="."]
+layout_mode = 0
+offset_left = 134.0
+offset_top = 306.0
+offset_right = 296.0
+offset_bottom = 345.0
 
-[node name="Actions" type="VBoxContainer" parent="BattleDock/Margin/Row"]
-custom_minimum_size = Vector2(112, 0)
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="LootButton" type="Button" parent="BattleDock/Margin/Row/Actions"]
+[node name="HeroHealth" type="ProgressBar" parent="HeroHud"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-theme_override_styles/normal = SubResource("StylePrimary")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "战利品  23"
+layout_mode = 0
+offset_right = 162.0
+offset_bottom = 8.0
+show_percentage = false
 
-[node name="ManageButton" type="Button" parent="BattleDock/Margin/Row/Actions"]
+[node name="HeroRage" type="ProgressBar" parent="HeroHud"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 34)
-layout_mode = 2
-theme_override_styles/normal = SubResource("StyleButton")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "整备"
+layout_mode = 0
+offset_top = 13.0
+offset_right = 162.0
+offset_bottom = 20.0
+max_value = 100.0
+show_percentage = false
 
-[node name="CompactButton" type="Button" parent="BattleDock/Margin/Row/Actions"]
+[node name="ClassLabel" type="Label" parent="HeroHud"]
+layout_mode = 0
+offset_top = 23.0
+offset_right = 162.0
+offset_bottom = 38.0
+theme_override_colors/font_color = Color(0.62, 0.7, 0.75, 1)
+theme_override_font_sizes/font_size = 9
+text = "狂怒战士 · 钢铁誓约"
+
+[node name="LootLabel" type="Label" parent="."]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-theme_override_styles/normal = SubResource("StyleButton")
-theme_override_styles/hover = SubResource("StyleButtonHover")
-theme_override_styles/focus = SubResource("StyleButtonHover")
-text = "收起"
+layout_mode = 0
+offset_left = 377.0
+offset_top = 305.0
+offset_right = 505.0
+offset_bottom = 331.0
+theme_override_colors/font_color = Color(0.53, 0.75, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+text = "装备坠落"
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0)
