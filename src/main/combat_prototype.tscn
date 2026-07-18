@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource path="res://src/main/main.gd" type="Script" id="1_main"]
+[ext_resource path="res://assets/fonts/NotoSansSC-IdleRift.ttf" type="FontFile" id="2_font"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -9,4 +10,5 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_font")
 script = ExtResource("1_main")

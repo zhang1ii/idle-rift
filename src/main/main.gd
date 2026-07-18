@@ -2,18 +2,105 @@ extends "res://src/main/fury_combat_controller.gd"
 
 
 const EquipmentInventoryModel = preload("res://src/gameplay/equipment_inventory.gd")
+const GameDataRepository = preload("res://src/data/game_data_repository.gd")
+const TalentTreeModelScript = preload("res://src/gameplay/talent_tree_model.gd")
+const TalentTreePanelScript = preload("res://src/ui/talent_tree_panel.gd")
 
 var equipment_inventory = EquipmentInventoryModel.new()
+var talent_tree = TalentTreeModelScript.new()
 var last_dropped_item: Dictionary = {}
 var active_talent_ids: Array[String] = []
 var barrier_refund_pending := 0.0
 var immovable_counter_stored := 0.0
+var talent_toggle_button: Button
+var talent_panel: TalentTreePanel
 
 
 func _ready() -> void:
+	talent_tree.configure(GameDataRepository.new().talents()["trees"]["fury_warrior"])
 	super._ready()
 	equipment_inventory.rng.randomize()
 	print("Idle Rift equipment drops, backpack and talent hooks loaded.")
+
+
+func _build_interface() -> void:
+	super._build_interface()
+	talent_toggle_button = _button("天赋树 [Tab]", 96, 23)
+	talent_toggle_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	talent_toggle_button.position = Vector2(-106, 37)
+	talent_toggle_button.pressed.connect(_toggle_talent_panel)
+	add_child(talent_toggle_button)
+	talent_panel = TalentTreePanelScript.new()
+	add_child(talent_panel)
+	talent_panel.setup(talent_tree)
+	talent_panel.talent_requested.connect(_on_talent_requested)
+	talent_panel.reset_requested.connect(_on_talent_reset_requested)
+	talent_panel.close_requested.connect(_hide_talent_panel)
+	talent_panel.visible = false
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event.is_pressed() or event.is_echo():
+		return
+	if event.keycode == KEY_TAB:
+		_toggle_talent_panel()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_ESCAPE and talent_panel != null and talent_panel.visible:
+		_hide_talent_panel()
+		get_viewport().set_input_as_handled()
+
+
+func allocate_talent(talent_id: String) -> bool:
+	if battle_state == BattleState.FIGHTING or not talent_tree.allocate(talent_id):
+		return false
+	_sync_active_talents_from_tree()
+	return true
+
+
+func refund_talent(talent_id: String) -> bool:
+	if battle_state == BattleState.FIGHTING or not talent_tree.refund(talent_id):
+		return false
+	_sync_active_talents_from_tree()
+	return true
+
+
+func reset_talents() -> bool:
+	if battle_state == BattleState.FIGHTING or not talent_tree.reset():
+		return false
+	_sync_active_talents_from_tree()
+	return true
+
+
+func _on_talent_requested(talent_id: String) -> void:
+	if talent_tree.has_talent(talent_id):
+		refund_talent(talent_id)
+	else:
+		allocate_talent(talent_id)
+
+
+func _on_talent_reset_requested() -> void:
+	reset_talents()
+
+
+func _sync_active_talents_from_tree() -> void:
+	active_talent_ids.assign(talent_tree.active_talent_ids)
+	_apply_talent_stat_modifiers()
+	if talent_panel != null:
+		talent_panel.refresh()
+	_refresh_all_ui()
+
+
+func _toggle_talent_panel() -> void:
+	if talent_panel == null:
+		return
+	talent_panel.visible = not talent_panel.visible
+	if talent_panel.visible:
+		talent_panel.refresh()
+
+
+func _hide_talent_panel() -> void:
+	if talent_panel != null:
+		talent_panel.visible = false
 
 
 func set_talent_enabled(talent_id: String, enabled: bool) -> bool:
@@ -45,7 +132,37 @@ func _start_battle() -> void:
 	_apply_talent_stat_modifiers()
 	barrier_refund_pending = 0.0
 	immovable_counter_stored = 0.0
+	talent_tree.begin_battle()
+	_hide_talent_panel()
 	super._start_battle()
+	if talent_panel != null:
+		talent_panel.refresh()
+
+
+func _return_to_preparation(message: String) -> void:
+	talent_tree.end_battle()
+	super._return_to_preparation(message)
+	if talent_panel != null:
+		talent_panel.refresh()
+
+
+func _collapse_all_platforms() -> void:
+	super._collapse_all_platforms()
+	talent_tree.end_battle()
+	if talent_panel != null:
+		talent_panel.refresh()
+
+
+func _on_boss_defeated() -> void:
+	var defeated_floor := current_floor
+	var first_clear := defeated_floor not in defeated_boss_floors
+	var awarded := talent_tree.record_guard_boss_victory(defeated_floor) if first_clear else 0
+	super._on_boss_defeated()
+	talent_tree.end_battle()
+	if awarded > 0:
+		battle_event.text += " · 获得 %d 点天赋（共 %d 点）" % [awarded, talent_tree.point_budget]
+	if talent_panel != null:
+		talent_panel.refresh()
 
 
 func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:

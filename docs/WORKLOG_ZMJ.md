@@ -100,6 +100,7 @@
 ### 测试与模拟
 
 - `tests/test_combat_prototype.gd`
+- `tests/test_talent_tree_ui.gd`
 - `tests/test_progression_model.gd`
 - `tests/test_equipment_system.gd`
 - `tests/simulate_progression_model.gd`
@@ -135,6 +136,8 @@ godot --headless --path . --script res://tests/simulate_equipment_farm.gd
 5. 第 10 层及后续 Boss 的独立机制、美术和关卡内容。
 6. 装备名称、图标、美术资源、掉落动画和音效。
 7. 多职业以及力量系、敏捷系、智力系装备池隔离。
+
+战前天赋树已经接入完整规则原型，支持三系四层、合法前置、免费洗点、终极互斥、Boss 首杀点数和战斗锁定。默认精修表现主场景仍使用独立战斗模型，后续需要先统一表现层与完整规则控制器，避免同一场战斗维护两套逻辑。
 
 建议下一阶段优先顺序：背包/配装 UI → 装备属性接入战斗 → 套装效果接入 → 存档与离线结算 → 新职业与后续 Boss。
 
