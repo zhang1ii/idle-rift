@@ -6,6 +6,8 @@ const EquipmentInventoryModel = preload("res://src/gameplay/equipment_inventory.
 var equipment_inventory = EquipmentInventoryModel.new()
 var last_dropped_item: Dictionary = {}
 var active_talent_ids: Array[String] = []
+var barrier_refund_pending := 0.0
+var immovable_counter_stored := 0.0
 
 
 func _ready() -> void:
@@ -17,17 +19,31 @@ func _ready() -> void:
 func set_talent_enabled(talent_id: String, enabled: bool) -> bool:
 	if battle_state == BattleState.FIGHTING:
 		return false
-	if talent_id != FuryRules.STEADY_RAGE_TALENT_ID:
+	if talent_id not in FuryRules.GUARD_TALENT_IDS:
 		return false
 	if enabled and talent_id not in active_talent_ids:
 		active_talent_ids.append(talent_id)
 	elif not enabled:
 		active_talent_ids.erase(talent_id)
+	_apply_talent_stat_modifiers()
 	return true
 
 
 func is_talent_enabled(talent_id: String) -> bool:
 	return talent_id in active_talent_ids
+
+
+func _apply_talent_stat_modifiers() -> void:
+	hero_stats.max_health_multiplier = FuryRules.THICK_SINEW_HEALTH_MULTIPLIER \
+		if is_talent_enabled(FuryRules.THICK_SINEW_TALENT_ID) else 1.0
+	hero_health = minf(hero_health, hero_stats.max_health())
+
+
+func _start_battle() -> void:
+	_apply_talent_stat_modifiers()
+	barrier_refund_pending = 0.0
+	immovable_counter_stored = 0.0
+	super._start_battle()
 
 
 func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
@@ -53,25 +69,78 @@ func _tick_skill_cooldowns(delta: float) -> void:
 
 
 func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -> void:
-	if skill_id != "rage_barrier" \
-	or not is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID):
+	if skill_id != "rage_barrier":
 		super._cast_fury_skill(skill_id, skill, skipped_count)
 		return
 	var notes := PackedStringArray()
 	if skipped_count > 0:
 		notes.append("跳过 %d 个不可用技能" % skipped_count)
-	var burst_active := burst_skills_remaining > 0
 	var rage_spent := hero_resource
 	skill_cooldowns[skill_id] = skill["cooldown"]
-	hero_shield += FuryRules.barrier_amount(
+	var barrier_gained := FuryRules.barrier_amount(
 		rage_spent,
 		hero_stats.haste,
-		true,
+		is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID),
+	)
+	hero_shield = minf(
+		FuryRules.barrier_cap(hero_stats.max_health()),
+		hero_shield + barrier_gained,
 	)
 	hero_resource = 0.0
-	notes.append("稳定怒意将急速转化为 %.0f 护盾" % hero_shield)
-	_consume_burst_charge(burst_active)
+	if is_talent_enabled(FuryRules.SHIELD_REFLOW_TALENT_ID):
+		barrier_refund_pending += FuryRules.shield_reflow_refund(rage_spent)
+	else:
+		barrier_refund_pending = 0.0
+	if is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID):
+		notes.append("稳定怒意将急速转化为 %.0f 护盾" % barrier_gained)
+	else:
+		notes.append("%.0f 怒意转化为 %.0f 护盾" % [rage_spent, barrier_gained])
+	if hero_shield >= FuryRules.barrier_cap(hero_stats.max_health()):
+		notes.append("护盾达到生命值上限")
+	# Rage Barrier receives no burst gain or cost benefit, so it must not waste a
+	# Fury Burst charge merely because it appears inside the strict skill cycle.
 	battle_event.text = "释放 %s · %s" % [skill["name"], "，".join(notes)]
+
+
+func _take_hero_damage(raw_damage: float, source_name: String) -> void:
+	var damage := raw_damage * hero_stats.damage_taken_multiplier()
+	var absorbed := minf(hero_shield, damage)
+	hero_shield -= absorbed
+	damage -= absorbed
+	var notes := PackedStringArray()
+	if absorbed > 0.0:
+		notes.append("护盾吸收 %.0f" % absorbed)
+		if barrier_refund_pending > 0.0:
+			var refund := barrier_refund_pending
+			barrier_refund_pending = 0.0
+			hero_resource = minf(FuryRules.MAX_RAGE, hero_resource + refund)
+			notes.append("怒盾回流 %.0f 怒意" % refund)
+		if is_talent_enabled(FuryRules.IMMOVABLE_TALENT_ID):
+			var gained_counter := FuryRules.immovable_counter_damage(
+				absorbed,
+				hero_stats.attack_power(),
+			)
+			immovable_counter_stored = minf(
+				hero_stats.attack_power() * FuryRules.IMMOVABLE_ATTACK_POWER_CAP,
+				immovable_counter_stored + gained_counter,
+			)
+			notes.append("储存 %.0f 反击伤害" % gained_counter)
+	hero_health = maxf(0.0, hero_health - damage)
+	battle_event.text = "%s 造成 %.0f 伤害" % [source_name, damage]
+	if not notes.is_empty():
+		battle_event.text += " · " + "，".join(notes)
+	if hero_health <= 0.0:
+		_return_to_preparation("挑战失败。调整怒意循环与壁垒时机后重试。")
+
+
+func _spender_counter_damage(_skill_id: String) -> float:
+	if not is_talent_enabled(FuryRules.IMMOVABLE_TALENT_ID):
+		return 0.0
+	return immovable_counter_stored
+
+
+func _consume_spender_counter_damage(_skill_id: String) -> void:
+	immovable_counter_stored = 0.0
 
 
 func _resolve_enemy_defeat() -> void:

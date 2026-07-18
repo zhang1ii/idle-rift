@@ -81,21 +81,21 @@
           "id": "steady_rage", "name": "稳定怒意", "branch": "guard", "tier": 2,
           "cost": 1, "required_total_points": 2, "prerequisites": ["thick_sinew"],
           "target_skill": "rage_barrier", "prototype_status": "mitigates_breakpoints",
-          "description": "怒意壁垒的冷却不再受急速影响，每1%急速使其护盾提高0.8%。",
-          "effects": {"haste_affects_cooldown": false, "haste_to_power_per_percent": 0.008}
+          "description": "怒意壁垒的冷却不再受急速影响，每1%急速使其护盾提高1%。",
+          "effects": {"haste_affects_cooldown": false, "haste_to_power_per_percent": 0.01}
         },
         {
           "id": "shield_reflow", "name": "怒盾回流", "branch": "guard", "tier": 3,
           "cost": 1, "required_total_points": 4, "prerequisites": ["steady_rage"],
-          "description": "怒意壁垒被完全击破时，返还本次消耗怒意的20%。",
-          "effects": {"barrier_break_rage_refund_ratio": 0.20}
+          "description": "怒意壁垒首次吸收伤害时，返还本次消耗怒意的20%。",
+          "effects": {"barrier_first_hit_rage_refund_ratio": 0.20}
         },
         {
           "id": "immovable", "name": "不动如山", "branch": "guard", "tier": 4,
           "cost": 1, "required_total_points": 6, "prerequisites": ["shield_reflow"],
           "exclusive_group": "fury_capstone",
-          "description": "释放怒意壁垒后获得4秒15%减伤。",
-          "effects": {"barrier_damage_reduction": 0.15, "barrier_reduction_duration": 4.0}
+          "description": "记录怒意壁垒吸收伤害的40%，使下一次泄怒技能附加等量伤害，最多不超过100%攻击强度。",
+          "effects": {"absorbed_damage_to_spender_ratio": 0.40, "counter_attack_power_cap": 1.0}
         }
       ]
     }

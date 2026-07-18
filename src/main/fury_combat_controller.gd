@@ -182,6 +182,12 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	if rng.randf() < hero_stats.critical_chance():
 		damage *= 2.0
 		notes.append("暴击")
+	if skill_id in ["single_spender", "aoe_spender"]:
+		var counter_damage := _spender_counter_damage(skill_id)
+		if counter_damage > 0.0:
+			damage += counter_damage
+			notes.append("不动如山反击 %.0f" % counter_damage)
+			_consume_spender_counter_damage(skill_id)
 	var actual_damage := _apply_damage_to_enemy(damage)
 	if boss_guard_charges == 0 and actual_damage < damage:
 		notes.append("外骨骼减伤")
@@ -197,6 +203,14 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	if not notes.is_empty():
 		battle_event.text += " · " + "，".join(notes)
 	_resolve_enemy_defeat()
+
+
+func _spender_counter_damage(_skill_id: String) -> float:
+	return 0.0
+
+
+func _consume_spender_counter_damage(_skill_id: String) -> void:
+	pass
 
 
 func _consume_burst_charge(was_active: bool) -> void:

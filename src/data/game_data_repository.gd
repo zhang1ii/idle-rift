@@ -153,5 +153,21 @@ func _validate() -> void:
 	assert(not bool(steady_rage["effects"]["haste_affects_cooldown"]), "稳定怒意必须移除壁垒的急速冷却收益。")
 	assert(is_equal_approx(
 		float(steady_rage["effects"]["haste_to_power_per_percent"]),
-		0.008,
+		0.01,
 	), "稳定怒意的急速转护盾系数必须与公式一致。")
+
+	var shield_reflow := talent_definition("fury_warrior", "shield_reflow")
+	assert(is_equal_approx(
+		float(shield_reflow["effects"]["barrier_first_hit_rage_refund_ratio"]),
+		0.20,
+	), "怒盾回流必须在壁垒首次吸收伤害时返还20%怒意。")
+
+	var immovable := talent_definition("fury_warrior", "immovable")
+	assert(is_equal_approx(
+		float(immovable["effects"]["absorbed_damage_to_spender_ratio"]),
+		0.40,
+	), "不动如山必须把40%壁垒吸收伤害转为泄怒反击。")
+	assert(is_equal_approx(
+		float(immovable["effects"]["counter_attack_power_cap"]),
+		1.0,
+	), "不动如山反击上限必须为100%攻击强度。")

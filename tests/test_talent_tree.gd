@@ -52,8 +52,24 @@ func _init() -> void:
 	assert(is_equal_approx(FuryTalentRules.bleed_leech_ratio(tree, active), 0.08))
 	assert(is_equal_approx(FuryTalentRules.remaining_bleed_burst_ratio(tree, active), 0.40))
 	assert(FuryTalentRules.steady_rage_enabled(active))
-	assert(is_equal_approx(FuryTalentRules.haste_to_barrier_rate(tree, active), 0.008))
+	assert(is_equal_approx(FuryTalentRules.haste_to_barrier_rate(tree, active), 0.01))
 	assert(is_equal_approx(FuryTalentRules.max_health_multiplier(tree, active), 1.08))
+
+	var guard_active: Array[String] = [
+		"thick_sinew", "steady_rage", "shield_reflow", "immovable",
+	]
+	assert(is_equal_approx(
+		FuryTalentRules.barrier_first_hit_refund_ratio(tree, guard_active),
+		0.20,
+	))
+	assert(is_equal_approx(
+		FuryTalentRules.absorbed_damage_to_spender_ratio(tree, guard_active),
+		0.40,
+	))
+	assert(is_equal_approx(
+		FuryTalentRules.counter_attack_power_cap(tree, guard_active),
+		1.0,
+	))
 
 	for boss_floor in range(15, 50, 5):
 		model.record_guard_boss_victory(boss_floor)

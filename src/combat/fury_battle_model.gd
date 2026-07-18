@@ -168,7 +168,10 @@ func _cast_barrier() -> void:
 		"skill_name": skill["name"],
 		"rage_before": rage_spent,
 	})
-	hero_shield += FuryRules.barrier_amount(rage_spent)
+	hero_shield = minf(
+		FuryRules.barrier_cap(hero_stats.max_health()),
+		hero_shield + FuryRules.barrier_amount(rage_spent),
+	)
 	hero_rage = 0.0
 	_cooldowns["rage_barrier"] = skill["cooldown"]
 	_emit("shield_changed", {"value": hero_shield, "gained": hero_shield})

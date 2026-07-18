@@ -5,8 +5,21 @@ const MAX_RAGE := 100.0
 const ATTACK_COOLDOWN := 4.0
 const BLEED_TICKS := 4
 const BLEED_INTERVAL := 1.0
+const THICK_SINEW_TALENT_ID := "thick_sinew"
 const STEADY_RAGE_TALENT_ID := "steady_rage"
-const STEADY_RAGE_HASTE_TO_BARRIER := 0.008
+const SHIELD_REFLOW_TALENT_ID := "shield_reflow"
+const IMMOVABLE_TALENT_ID := "immovable"
+const GUARD_TALENT_IDS: Array[String] = [
+	THICK_SINEW_TALENT_ID,
+	STEADY_RAGE_TALENT_ID,
+	SHIELD_REFLOW_TALENT_ID,
+	IMMOVABLE_TALENT_ID,
+]
+const THICK_SINEW_HEALTH_MULTIPLIER := 1.08
+const STEADY_RAGE_HASTE_TO_BARRIER := 0.01
+const SHIELD_REFLOW_REFUND_RATIO := 0.20
+const IMMOVABLE_ABSORB_TO_DAMAGE := 0.40
+const IMMOVABLE_ATTACK_POWER_CAP := 1.0
 
 
 static func skill_catalog() -> Dictionary:
@@ -97,6 +110,24 @@ static func barrier_amount(
 
 static func steady_rage_power_multiplier(haste_percent: float) -> float:
 	return 1.0 + maxf(0.0, haste_percent) * STEADY_RAGE_HASTE_TO_BARRIER
+
+
+static func barrier_cap(max_health: float) -> float:
+	return maxf(0.0, max_health)
+
+
+static func shield_reflow_refund(rage_spent: float) -> float:
+	return maxf(0.0, rage_spent) * SHIELD_REFLOW_REFUND_RATIO
+
+
+static func immovable_counter_damage(
+	absorbed_damage: float,
+	attack_power: float,
+) -> float:
+	return minf(
+		maxf(0.0, absorbed_damage) * IMMOVABLE_ABSORB_TO_DAMAGE,
+		maxf(0.0, attack_power) * IMMOVABLE_ATTACK_POWER_CAP,
+	)
 
 
 static func cooldown_recovery_multiplier(

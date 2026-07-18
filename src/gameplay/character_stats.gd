@@ -15,6 +15,7 @@ var mastery := 18.0
 var haste := 20.0
 var critical_strike := 15.0
 var versatility := 8.0
+var max_health_multiplier := 1.0
 
 
 func apply_reference_gear_tier(value: float) -> void:
@@ -45,7 +46,7 @@ func attack_power() -> float:
 
 
 func max_health() -> float:
-	return 80.0 + stamina * 2.0
+	return (80.0 + stamina * 2.0) * maxf(0.0, max_health_multiplier)
 
 
 func haste_multiplier() -> float:

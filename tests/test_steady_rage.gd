@@ -15,11 +15,11 @@ func _run_tests() -> void:
 	assert(talent.id == FuryRules.STEADY_RAGE_TALENT_ID)
 	assert(is_equal_approx(
 		FuryRules.steady_rage_power_multiplier(20.0),
-		1.16,
+		1.20,
 	))
 	assert(is_equal_approx(
 		FuryRules.barrier_amount(80.0, 20.0, true),
-		111.36,
+		115.20,
 	))
 	assert(is_equal_approx(
 		FuryRules.cooldown_recovery_multiplier("rage_barrier", 20.0, true),
@@ -48,7 +48,7 @@ func _run_tests() -> void:
 	game.skill_cooldowns["rage_barrier"] = 0.0
 	game.skill_cursor = game.skill_order.find("rage_barrier")
 	game._hero_take_action()
-	assert(is_equal_approx(game.hero_shield, 111.36))
+	assert(is_equal_approx(game.hero_shield, 115.20))
 	assert(game.hero_resource == 0.0)
 	print("Steady Rage tests passed: prebattle talent, fixed cooldown and haste-to-shield conversion.")
 	quit()

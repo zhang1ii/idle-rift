@@ -50,16 +50,16 @@ static func haste_to_barrier_rate(tree: Dictionary, active: Array) -> float:
 	return _sum_effect(tree, active, "haste_to_power_per_percent")
 
 
-static func barrier_break_refund_ratio(tree: Dictionary, active: Array) -> float:
-	return _sum_effect(tree, active, "barrier_break_rage_refund_ratio")
+static func barrier_first_hit_refund_ratio(tree: Dictionary, active: Array) -> float:
+	return _sum_effect(tree, active, "barrier_first_hit_rage_refund_ratio")
 
 
-static func barrier_damage_reduction(tree: Dictionary, active: Array) -> float:
-	return _sum_effect(tree, active, "barrier_damage_reduction")
+static func absorbed_damage_to_spender_ratio(tree: Dictionary, active: Array) -> float:
+	return _sum_effect(tree, active, "absorbed_damage_to_spender_ratio")
 
 
-static func barrier_reduction_duration(tree: Dictionary, active: Array) -> float:
-	return _sum_effect(tree, active, "barrier_reduction_duration")
+static func counter_attack_power_cap(tree: Dictionary, active: Array) -> float:
+	return _sum_effect(tree, active, "counter_attack_power_cap")
 
 
 static func _active_nodes(tree: Dictionary, active: Array) -> Array[Dictionary]:
