@@ -145,7 +145,10 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 		return
 
 	if skill_id == "dot_heal":
-		var healing := minf(dot_damage_bank * 0.75, hero_stats.max_health() * 0.35)
+		var healing := minf(
+			dot_damage_bank * _dot_heal_conversion_ratio(),
+			hero_stats.max_health() * _dot_heal_cap_ratio(),
+		)
 		hero_health = minf(hero_stats.max_health(), hero_health + healing)
 		dot_damage_bank = 0.0
 		notes.append("恢复 %.0f 生命" % healing)
@@ -249,6 +252,14 @@ func _burst_spender_refund(
 
 func _bleed_damage_multiplier() -> float:
 	return 1.0
+
+
+func _dot_heal_conversion_ratio() -> float:
+	return FuryRules.BASE_DOT_HEAL_CONVERSION_RATIO
+
+
+func _dot_heal_cap_ratio() -> float:
+	return FuryRules.BASE_DOT_HEAL_CAP_RATIO
 
 
 func _consume_burst_charge(was_active: bool) -> void:

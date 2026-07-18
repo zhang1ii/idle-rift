@@ -185,6 +185,18 @@ func _bleed_damage_multiplier() -> float:
 	)
 
 
+func _dot_heal_conversion_ratio() -> float:
+	return FuryRules.dot_heal_conversion_ratio(
+		is_talent_enabled(FuryRules.BLOOD_MEMORY_TALENT_ID),
+	)
+
+
+func _dot_heal_cap_ratio() -> float:
+	return FuryRules.dot_heal_cap_ratio(
+		is_talent_enabled(FuryRules.BLOOD_MEMORY_TALENT_ID),
+	)
+
+
 func _resolve_enemy_defeat() -> void:
 	if enemy_health > 0.0:
 		return

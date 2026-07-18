@@ -16,8 +16,10 @@ const FURY_TALENT_IDS: Array[String] = [
 	ENDLESS_FRENZY_TALENT_ID,
 ]
 const CARVED_WOUNDS_TALENT_ID := "carved_wounds"
+const BLOOD_MEMORY_TALENT_ID := "blood_memory"
 const BLOOD_TALENT_IDS: Array[String] = [
 	CARVED_WOUNDS_TALENT_ID,
+	BLOOD_MEMORY_TALENT_ID,
 ]
 const THICK_SINEW_TALENT_ID := "thick_sinew"
 const STEADY_RAGE_TALENT_ID := "steady_rage"
@@ -36,6 +38,10 @@ const CHAINED_BURST_CHARGE_BONUS := 1
 const PRECISE_RELEASE_DAMAGE_MULTIPLIER := 1.15
 const ENDLESS_FRENZY_REFUND_RATIO := 0.20
 const CARVED_WOUNDS_BLEED_MULTIPLIER := 1.15
+const BASE_DOT_HEAL_CONVERSION_RATIO := 0.75
+const BASE_DOT_HEAL_CAP_RATIO := 0.35
+const BLOOD_MEMORY_CONVERSION_RATIO := 0.90
+const BLOOD_MEMORY_HEAL_CAP_RATIO := 0.40
 const STEADY_RAGE_HASTE_TO_BARRIER := 0.01
 const SHIELD_REFLOW_REFUND_RATIO := 0.20
 const IMMOVABLE_ABSORB_TO_DAMAGE := 0.40
@@ -133,6 +139,15 @@ static func endless_frenzy_refund(rage_spent: float, endless_frenzy_enabled: boo
 
 static func bleed_talent_damage_multiplier(carved_wounds_enabled: bool) -> float:
 	return CARVED_WOUNDS_BLEED_MULTIPLIER if carved_wounds_enabled else 1.0
+
+
+static func dot_heal_conversion_ratio(blood_memory_enabled: bool) -> float:
+	return BLOOD_MEMORY_CONVERSION_RATIO \
+		if blood_memory_enabled else BASE_DOT_HEAL_CONVERSION_RATIO
+
+
+static func dot_heal_cap_ratio(blood_memory_enabled: bool) -> float:
+	return BLOOD_MEMORY_HEAL_CAP_RATIO if blood_memory_enabled else BASE_DOT_HEAL_CAP_RATIO
 
 
 static func burst_cost_reduction(mastery_percent: float) -> float:
