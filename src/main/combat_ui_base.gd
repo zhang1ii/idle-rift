@@ -519,7 +519,7 @@ func _build_combatant_card(arena: Control, is_hero: bool) -> void:
 
 func _build_bottom(parent: Control) -> void:
 	var bottom := HBoxContainer.new()
-	bottom.custom_minimum_size.y = 142
+	bottom.custom_minimum_size.y = 148
 	bottom.add_theme_constant_override("separation", 6)
 	parent.add_child(bottom)
 	_build_skill_panel(bottom)
@@ -601,4 +601,5 @@ func _button(text_value: String, width: float, height: float) -> Button:
 	var button := Button.new()
 	button.text = text_value
 	button.custom_minimum_size = Vector2(width, height)
+	button.add_theme_font_size_override("font_size", 9)
 	return button

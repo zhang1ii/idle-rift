@@ -1,0 +1,211 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource path="res://src/ui/functional_battle_view.gd" type="Script" id="1_view"]
+[ext_resource path="res://assets/backgrounds/rift_causeway.png" type="Texture2D" id="2_bg"]
+[ext_resource path="res://src/combat/battle_fx_layer.gd" type="Script" id="3_fx"]
+
+[sub_resource type="Gradient" id="Gradient_shade"]
+colors = PackedColorArray(0.01, 0.015, 0.025, 0.78, 0.01, 0.015, 0.025, 0.08)
+
+[node name="FunctionalBattleView" type="Control"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+script = ExtResource("1_view")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.015, 0.03, 0.05, 0.3)
+
+[node name="TopShade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 28.0
+grow_horizontal = 2
+mouse_filter = 2
+color = Color(0.01, 0.015, 0.025, 0.7)
+
+[node name="World" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="HeroShadow" type="Polygon2D" parent="World"]
+position = Vector2(190, 130)
+polygon = PackedVector2Array(-24, 0, -16, -4, 16, -4, 24, 0, 16, 4, -16, 4)
+color = Color(0.01, 0.015, 0.02, 0.55)
+
+[node name="EnemyShadow" type="Polygon2D" parent="World"]
+position = Vector2(450, 130)
+polygon = PackedVector2Array(-28, 0, -20, -4, 20, -4, 28, 0, 20, 4, -20, 4)
+color = Color(0.01, 0.015, 0.02, 0.58)
+
+[node name="Hero" type="AnimatedSprite2D" parent="World"]
+unique_name_in_owner = true
+z_index = 2
+position = Vector2(190, 91)
+scale = Vector2(1.02, 1.02)
+
+[node name="Enemy" type="AnimatedSprite2D" parent="World"]
+unique_name_in_owner = true
+z_index = 1
+position = Vector2(450, 89)
+scale = Vector2(0.94, 0.94)
+
+[node name="BattleFx" type="Node2D" parent="World"]
+unique_name_in_owner = true
+z_index = 8
+script = ExtResource("3_fx")
+
+[node name="BattleStatus" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 4.0
+offset_bottom = 22.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.82, 0.72, 0.52, 1)
+theme_override_font_sizes/font_size = 10
+text = "战前准备"
+horizontal_alignment = 1
+
+[node name="HeroHud" type="Control" parent="."]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 105.0
+offset_right = 246.0
+offset_bottom = 143.0
+
+[node name="HeroHealth" type="ProgressBar" parent="HeroHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 170.0
+offset_bottom = 7.0
+show_percentage = false
+
+[node name="HeroHealthText" type="Label" parent="HeroHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 8.0
+offset_right = 170.0
+offset_bottom = 20.0
+theme_override_font_sizes/font_size = 8
+text = "生命"
+
+[node name="HeroRage" type="ProgressBar" parent="HeroHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 21.0
+offset_right = 170.0
+offset_bottom = 27.0
+show_percentage = false
+
+[node name="HeroRageText" type="Label" parent="HeroHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 27.0
+offset_right = 170.0
+offset_bottom = 38.0
+theme_override_colors/font_color = Color(0.94, 0.72, 0.36, 1)
+theme_override_font_sizes/font_size = 8
+text = "怒意"
+
+[node name="HeroAction" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 74.0
+offset_top = 84.0
+offset_right = 250.0
+offset_bottom = 101.0
+theme_override_colors/font_color = Color(0.66, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 8
+text = "英雄状态"
+horizontal_alignment = 1
+
+[node name="EnemyHud" type="Control" parent="."]
+layout_mode = 0
+offset_left = 364.0
+offset_top = 36.0
+offset_right = 540.0
+offset_bottom = 69.0
+
+[node name="EnemyName" type="Label" parent="EnemyHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 176.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.88, 0.9, 0.92, 1)
+theme_override_font_sizes/font_size = 9
+text = "裂隙敌人"
+horizontal_alignment = 1
+
+[node name="EnemyHealth" type="ProgressBar" parent="EnemyHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 15.0
+offset_right = 176.0
+offset_bottom = 22.0
+show_percentage = false
+
+[node name="EnemyHealthText" type="Label" parent="EnemyHud"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 23.0
+offset_right = 176.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 8
+text = "生命"
+horizontal_alignment = 1
+
+[node name="EnemyAction" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 362.0
+offset_top = 72.0
+offset_right = 542.0
+offset_bottom = 86.0
+theme_override_colors/font_color = Color(0.66, 0.74, 0.8, 1)
+theme_override_font_sizes/font_size = 8
+text = "敌人状态"
+horizontal_alignment = 1
+
+[node name="BattleEvent" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 250.0
+offset_top = -23.0
+offset_right = -78.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.88, 0.8, 0.64, 1)
+theme_override_font_sizes/font_size = 8
+text = "配置完成后开始战斗"
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 3

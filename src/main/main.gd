@@ -5,6 +5,7 @@ const EquipmentInventoryModel = preload("res://src/gameplay/equipment_inventory.
 const GameDataRepository = preload("res://src/data/game_data_repository.gd")
 const TalentTreeModelScript = preload("res://src/gameplay/talent_tree_model.gd")
 const TalentTreePanelScript = preload("res://src/ui/talent_tree_panel.gd")
+const FunctionalBattleViewScene = preload("res://src/ui/functional_battle_view.tscn")
 
 var equipment_inventory = EquipmentInventoryModel.new()
 var talent_tree = TalentTreeModelScript.new()
@@ -14,6 +15,7 @@ var barrier_refund_pending := 0.0
 var immovable_counter_stored := 0.0
 var talent_toggle_button: Button
 var talent_panel: TalentTreePanel
+var battle_view: FunctionalBattleView
 
 
 func _ready() -> void:
@@ -37,6 +39,22 @@ func _build_interface() -> void:
 	talent_panel.reset_requested.connect(_on_talent_reset_requested)
 	talent_panel.close_requested.connect(_hide_talent_panel)
 	talent_panel.visible = false
+
+
+func _build_arena(parent: Control) -> void:
+	battle_view = FunctionalBattleViewScene.instantiate()
+	parent.add_child(battle_view)
+	battle_status = battle_view.get_node("%BattleStatus")
+	battle_event = battle_view.get_node("%BattleEvent")
+	hero_health_bar = battle_view.get_node("%HeroHealth")
+	hero_health_text = battle_view.get_node("%HeroHealthText")
+	hero_resource_bar = battle_view.get_node("%HeroRage")
+	hero_resource_text = battle_view.get_node("%HeroRageText")
+	hero_action = battle_view.get_node("%HeroAction")
+	enemy_name = battle_view.get_node("%EnemyName")
+	enemy_health_bar = battle_view.get_node("%EnemyHealth")
+	enemy_health_text = battle_view.get_node("%EnemyHealthText")
+	enemy_action = battle_view.get_node("%EnemyAction")
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -189,7 +207,17 @@ func _tick_skill_cooldowns(delta: float) -> void:
 
 func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -> void:
 	if skill_id != "rage_barrier":
+		var health_before := enemy_health
 		super._cast_fury_skill(skill_id, skill, skipped_count)
+		if battle_view != null:
+			battle_view.play_skill(skill_id)
+			if enemy_health < health_before:
+				battle_view.play_enemy_damage(
+					health_before - enemy_health,
+					skill_id in ["single_spender", "aoe_spender"],
+					false,
+					enemy_health <= 0.0,
+				)
 		return
 	var notes := PackedStringArray()
 	if skipped_count > 0:
@@ -219,9 +247,13 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	# Rage Barrier receives no burst gain or cost benefit, so it must not waste a
 	# Fury Burst charge merely because it appears inside the strict skill cycle.
 	battle_event.text = "释放 %s · %s" % [skill["name"], "，".join(notes)]
+	if battle_view != null:
+		battle_view.play_skill(skill_id)
 
 
 func _take_hero_damage(raw_damage: float, source_name: String) -> void:
+	var health_before := hero_health
+	var shield_before := hero_shield
 	var damage := raw_damage * hero_stats.damage_taken_multiplier()
 	var absorbed := minf(hero_shield, damage)
 	hero_shield -= absorbed
@@ -250,6 +282,32 @@ func _take_hero_damage(raw_damage: float, source_name: String) -> void:
 		battle_event.text += " · " + "，".join(notes)
 	if hero_health <= 0.0:
 		_return_to_preparation("挑战失败。调整怒意循环与壁垒时机后重试。")
+	if battle_view != null:
+		battle_view.play_hero_damage(health_before - hero_health, shield_before - hero_shield)
+
+
+func _spawn_enemy() -> void:
+	super._spawn_enemy()
+	if battle_view != null:
+		battle_view.spawn_enemy()
+
+
+func _process_fury_bleed(delta: float) -> void:
+	var health_before := enemy_health
+	super._process_fury_bleed(delta)
+	if battle_view != null and enemy_health < health_before:
+		battle_view.play_enemy_damage(
+			health_before - enemy_health,
+			false,
+			true,
+			enemy_health <= 0.0,
+		)
+
+
+func _refresh_combat_ui() -> void:
+	super._refresh_combat_ui()
+	if battle_view != null:
+		battle_view.sync_shield(hero_shield)
 
 
 func _spender_counter_damage(_skill_id: String) -> float:
