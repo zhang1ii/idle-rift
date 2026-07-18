@@ -179,6 +179,10 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	if skill_id in ["single_spender", "aoe_spender"]:
 		damage *= FuryRules.mastery_damage_multiplier(hero_stats.mastery)
 		notes.append("精通强化泄怒")
+		var spender_multiplier := _spender_damage_multiplier(skill_id)
+		if spender_multiplier > 1.0:
+			damage *= spender_multiplier
+			notes.append("精准倾泻提高伤害")
 	if intimidation_actions > 0:
 		damage *= 1.0 - BossRules.INTIMIDATION_DAMAGE_PENALTY
 		intimidation_actions -= 1
@@ -223,6 +227,10 @@ func _builder_base_rage_bonus(_skill_id: String) -> float:
 
 func _burst_charge_count() -> int:
 	return FuryRules.BASE_BURST_CHARGES
+
+
+func _spender_damage_multiplier(_skill_id: String) -> float:
+	return 1.0
 
 
 func _consume_burst_charge(was_active: bool) -> void:

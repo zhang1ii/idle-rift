@@ -157,6 +157,14 @@ func _burst_charge_count() -> int:
 	)
 
 
+func _spender_damage_multiplier(skill_id: String) -> float:
+	if skill_id in ["single_spender", "aoe_spender"]:
+		return FuryRules.spender_talent_damage_multiplier(
+			is_talent_enabled(FuryRules.PRECISE_RELEASE_TALENT_ID),
+		)
+	return 1.0
+
+
 func _resolve_enemy_defeat() -> void:
 	if enemy_health > 0.0:
 		return
