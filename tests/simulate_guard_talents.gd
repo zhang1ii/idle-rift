@@ -9,6 +9,7 @@ const BUILDS := [
 	{"label": "steady", "talents": [FuryRules.STEADY_RAGE_TALENT_ID]},
 	{"label": "full_guard", "talents": FuryRules.GUARD_TALENT_IDS},
 	{"label": "full_fury", "talents": FuryRules.FURY_TALENT_IDS},
+	{"label": "full_blood", "talents": FuryRules.BLOOD_TALENT_IDS},
 ]
 
 
