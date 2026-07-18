@@ -20,7 +20,7 @@ func set_talent_enabled(talent_id: String, enabled: bool) -> bool:
 	if battle_state == BattleState.FIGHTING:
 		return false
 	if talent_id not in FuryRules.GUARD_TALENT_IDS \
-	and talent_id != FuryRules.BOILING_SPIRIT_TALENT_ID:
+	and talent_id not in FuryRules.FURY_TALENT_IDS:
 		return false
 	if enabled and talent_id not in active_talent_ids:
 		active_talent_ids.append(talent_id)
@@ -149,6 +149,12 @@ func _builder_base_rage_bonus(skill_id: String) -> float:
 	and is_talent_enabled(FuryRules.BOILING_SPIRIT_TALENT_ID):
 		return FuryRules.BOILING_SPIRIT_BASE_RAGE_BONUS
 	return 0.0
+
+
+func _burst_charge_count() -> int:
+	return FuryRules.burst_charge_count(
+		is_talent_enabled(FuryRules.CHAINED_BURST_TALENT_ID),
+	)
 
 
 func _resolve_enemy_defeat() -> void:

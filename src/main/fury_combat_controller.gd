@@ -137,8 +137,8 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	skill_cooldowns[skill_id] = skill["cooldown"]
 
 	if skill_id == "fury_burst":
-		burst_skills_remaining = 3
-		notes.append("后续 3 个技能获得爆发强化")
+		burst_skills_remaining = _burst_charge_count()
+		notes.append("后续 %d 个技能获得爆发强化" % burst_skills_remaining)
 		battle_event.text = "释放 %s · %s" % [skill["name"], "，".join(notes)]
 		return
 
@@ -219,6 +219,10 @@ func _consume_spender_counter_damage(_skill_id: String) -> void:
 
 func _builder_base_rage_bonus(_skill_id: String) -> float:
 	return 0.0
+
+
+func _burst_charge_count() -> int:
+	return FuryRules.BASE_BURST_CHARGES
 
 
 func _consume_burst_charge(was_active: bool) -> void:

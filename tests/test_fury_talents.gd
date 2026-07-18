@@ -27,14 +27,24 @@ func _run_tests() -> void:
 		FuryRules.builder_base_rage_gain(25.0, true),
 		30.0,
 	))
+	assert(FuryRules.burst_charge_count(false) == 3)
+	assert(FuryRules.burst_charge_count(true) == 4)
 
 	var game = MainScene.instantiate()
 	root.add_child(game)
 	await process_frame
 	assert(game.set_talent_enabled(FuryRules.BOILING_SPIRIT_TALENT_ID, true))
+	assert(game.set_talent_enabled(FuryRules.CHAINED_BURST_TALENT_ID, true))
 	game.current_floor = 1
 	game._start_battle()
 	assert(not game.set_talent_enabled(FuryRules.BOILING_SPIRIT_TALENT_ID, false))
+
+	game._cast_fury_skill(
+		"fury_burst",
+		FuryRules.skill_catalog()["fury_burst"],
+		0,
+	)
+	assert(game.burst_skills_remaining == 4)
 
 	game.hero_resource = 0.0
 	game.burst_skills_remaining = 0
@@ -45,5 +55,5 @@ func _run_tests() -> void:
 	)
 	var expected_rage := FuryRules.rage_gain(30.0, game.hero_stats.mastery)
 	assert(is_equal_approx(game.hero_resource, expected_rage))
-	print("Fury talent tests passed: Boiling Spirit adds base rage before mastery.")
+	print("Fury talent tests passed: Boiling Spirit rage and Chained Burst charges.")
 	quit()
