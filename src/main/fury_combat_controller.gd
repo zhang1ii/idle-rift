@@ -247,6 +247,10 @@ func _burst_spender_refund(
 	return 0.0
 
 
+func _bleed_damage_multiplier() -> float:
+	return 1.0
+
+
 func _consume_burst_charge(was_active: bool) -> void:
 	if was_active:
 		burst_skills_remaining = maxi(0, burst_skills_remaining - 1)
@@ -260,6 +264,7 @@ func _apply_bleed(tick_multiplier: float) -> void:
 		* tick_multiplier
 		* hero_stats.outgoing_multiplier()
 		* FuryRules.mastery_damage_multiplier(hero_stats.mastery)
+		* _bleed_damage_multiplier()
 	)
 
 

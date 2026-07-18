@@ -20,7 +20,8 @@ func set_talent_enabled(talent_id: String, enabled: bool) -> bool:
 	if battle_state == BattleState.FIGHTING:
 		return false
 	if talent_id not in FuryRules.GUARD_TALENT_IDS \
-	and talent_id not in FuryRules.FURY_TALENT_IDS:
+	and talent_id not in FuryRules.FURY_TALENT_IDS \
+	and talent_id not in FuryRules.BLOOD_TALENT_IDS:
 		return false
 	if enabled and talent_id not in active_talent_ids:
 		active_talent_ids.append(talent_id)
@@ -175,6 +176,12 @@ func _burst_spender_refund(
 	return FuryRules.endless_frenzy_refund(
 		rage_spent,
 		is_talent_enabled(FuryRules.ENDLESS_FRENZY_TALENT_ID),
+	)
+
+
+func _bleed_damage_multiplier() -> float:
+	return FuryRules.bleed_talent_damage_multiplier(
+		is_talent_enabled(FuryRules.CARVED_WOUNDS_TALENT_ID),
 	)
 
 

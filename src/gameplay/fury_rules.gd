@@ -15,6 +15,10 @@ const FURY_TALENT_IDS: Array[String] = [
 	PRECISE_RELEASE_TALENT_ID,
 	ENDLESS_FRENZY_TALENT_ID,
 ]
+const CARVED_WOUNDS_TALENT_ID := "carved_wounds"
+const BLOOD_TALENT_IDS: Array[String] = [
+	CARVED_WOUNDS_TALENT_ID,
+]
 const THICK_SINEW_TALENT_ID := "thick_sinew"
 const STEADY_RAGE_TALENT_ID := "steady_rage"
 const SHIELD_REFLOW_TALENT_ID := "shield_reflow"
@@ -31,6 +35,7 @@ const BASE_BURST_CHARGES := 3
 const CHAINED_BURST_CHARGE_BONUS := 1
 const PRECISE_RELEASE_DAMAGE_MULTIPLIER := 1.15
 const ENDLESS_FRENZY_REFUND_RATIO := 0.20
+const CARVED_WOUNDS_BLEED_MULTIPLIER := 1.15
 const STEADY_RAGE_HASTE_TO_BARRIER := 0.01
 const SHIELD_REFLOW_REFUND_RATIO := 0.20
 const IMMOVABLE_ABSORB_TO_DAMAGE := 0.40
@@ -124,6 +129,10 @@ static func endless_frenzy_refund(rage_spent: float, endless_frenzy_enabled: boo
 	if not endless_frenzy_enabled:
 		return 0.0
 	return maxf(0.0, rage_spent) * ENDLESS_FRENZY_REFUND_RATIO
+
+
+static func bleed_talent_damage_multiplier(carved_wounds_enabled: bool) -> float:
+	return CARVED_WOUNDS_BLEED_MULTIPLIER if carved_wounds_enabled else 1.0
 
 
 static func burst_cost_reduction(mastery_percent: float) -> float:
