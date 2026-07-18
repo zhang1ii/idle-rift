@@ -8,6 +8,7 @@ const BUILDS := [
 	{"label": "none", "talents": []},
 	{"label": "steady", "talents": [FuryRules.STEADY_RAGE_TALENT_ID]},
 	{"label": "full_guard", "talents": FuryRules.GUARD_TALENT_IDS},
+	{"label": "full_fury", "talents": FuryRules.FURY_TALENT_IDS},
 ]
 
 
@@ -45,7 +46,7 @@ func _simulate(gear_tier: float, build: Dictionary) -> void:
 		game.queue_free()
 		await process_frame
 	var average := total_win_time / wins if wins > 0 else 0.0
-	print("Guard balance | G%.0f | %s | wins %d/20 | avg %.1fs" % [
+	print("Talent balance | G%.0f | %s | wins %d/20 | avg %.1fs" % [
 		gear_tier,
 		String(build["label"]),
 		wins,
