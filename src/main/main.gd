@@ -197,6 +197,12 @@ func _dot_heal_cap_ratio() -> float:
 	)
 
 
+func _bleed_leech_ratio() -> float:
+	return FuryRules.bleed_leech_ratio(
+		is_talent_enabled(FuryRules.THIRSTING_WOUNDS_TALENT_ID),
+	)
+
+
 func _resolve_enemy_defeat() -> void:
 	if enemy_health > 0.0:
 		return

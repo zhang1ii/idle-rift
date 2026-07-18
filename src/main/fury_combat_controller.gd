@@ -262,6 +262,10 @@ func _dot_heal_cap_ratio() -> float:
 	return FuryRules.BASE_DOT_HEAL_CAP_RATIO
 
 
+func _bleed_leech_ratio() -> float:
+	return 0.0
+
+
 func _consume_burst_charge(was_active: bool) -> void:
 	if was_active:
 		burst_skills_remaining = maxi(0, burst_skills_remaining - 1)
@@ -292,8 +296,13 @@ func _process_fury_bleed(delta: float) -> void:
 		damage *= 1.0 - BossRules.INTIMIDATION_DAMAGE_PENALTY
 	var actual_damage := _apply_damage_to_enemy(damage)
 	dot_damage_bank += actual_damage
+	var leech_healing := actual_damage * _bleed_leech_ratio()
+	if leech_healing > 0.0:
+		hero_health = minf(hero_stats.max_health(), hero_health + leech_healing)
 	battle_event.text = "流血造成 %.0f 伤害（剩余 %d 跳）" % [
 		actual_damage, bleed_ticks_remaining]
+	if leech_healing > 0.0:
+		battle_event.text += " · 饥渴伤口恢复 %.0f 生命" % leech_healing
 	_resolve_enemy_defeat()
 
 

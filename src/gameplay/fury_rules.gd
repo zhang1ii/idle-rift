@@ -17,9 +17,11 @@ const FURY_TALENT_IDS: Array[String] = [
 ]
 const CARVED_WOUNDS_TALENT_ID := "carved_wounds"
 const BLOOD_MEMORY_TALENT_ID := "blood_memory"
+const THIRSTING_WOUNDS_TALENT_ID := "thirsting_wounds"
 const BLOOD_TALENT_IDS: Array[String] = [
 	CARVED_WOUNDS_TALENT_ID,
 	BLOOD_MEMORY_TALENT_ID,
+	THIRSTING_WOUNDS_TALENT_ID,
 ]
 const THICK_SINEW_TALENT_ID := "thick_sinew"
 const STEADY_RAGE_TALENT_ID := "steady_rage"
@@ -42,6 +44,7 @@ const BASE_DOT_HEAL_CONVERSION_RATIO := 0.75
 const BASE_DOT_HEAL_CAP_RATIO := 0.35
 const BLOOD_MEMORY_CONVERSION_RATIO := 0.90
 const BLOOD_MEMORY_HEAL_CAP_RATIO := 0.40
+const THIRSTING_WOUNDS_LEECH_RATIO := 0.08
 const STEADY_RAGE_HASTE_TO_BARRIER := 0.01
 const SHIELD_REFLOW_REFUND_RATIO := 0.20
 const IMMOVABLE_ABSORB_TO_DAMAGE := 0.40
@@ -148,6 +151,10 @@ static func dot_heal_conversion_ratio(blood_memory_enabled: bool) -> float:
 
 static func dot_heal_cap_ratio(blood_memory_enabled: bool) -> float:
 	return BLOOD_MEMORY_HEAL_CAP_RATIO if blood_memory_enabled else BASE_DOT_HEAL_CAP_RATIO
+
+
+static func bleed_leech_ratio(thirsting_wounds_enabled: bool) -> float:
+	return THIRSTING_WOUNDS_LEECH_RATIO if thirsting_wounds_enabled else 0.0
 
 
 static func burst_cost_reduction(mastery_percent: float) -> float:

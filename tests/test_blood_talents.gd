@@ -25,12 +25,15 @@ func _run_tests() -> void:
 	assert(is_equal_approx(FuryRules.dot_heal_conversion_ratio(true), 0.90))
 	assert(is_equal_approx(FuryRules.dot_heal_cap_ratio(false), 0.35))
 	assert(is_equal_approx(FuryRules.dot_heal_cap_ratio(true), 0.40))
+	assert(is_equal_approx(FuryRules.bleed_leech_ratio(false), 0.0))
+	assert(is_equal_approx(FuryRules.bleed_leech_ratio(true), 0.08))
 
 	var game = MainScene.instantiate()
 	root.add_child(game)
 	await process_frame
 	assert(game.set_talent_enabled(FuryRules.CARVED_WOUNDS_TALENT_ID, true))
 	assert(game.set_talent_enabled(FuryRules.BLOOD_MEMORY_TALENT_ID, true))
+	assert(game.set_talent_enabled(FuryRules.THIRSTING_WOUNDS_TALENT_ID, true))
 	game.current_floor = 1
 	game._start_battle()
 	assert(not game.set_talent_enabled(FuryRules.CARVED_WOUNDS_TALENT_ID, false))
@@ -54,5 +57,20 @@ func _run_tests() -> void:
 	)
 	assert(is_equal_approx(game.hero_health, game.hero_stats.max_health() * 0.40))
 	assert(is_equal_approx(game.dot_damage_bank, 0.0))
-	print("Blood talent tests passed: bleed damage and Blood Memory healing.")
+
+	game.hero_health = game.hero_stats.max_health() - 50.0
+	game.enemy_health = 1000.0
+	game.enemy_max_health = 1000.0
+	game.intimidation_actions = 0
+	game.boss_guard_charges = 0
+	game._apply_bleed(0.18)
+	game.bleed_tick_timer = 0.0
+	var health_before: float = game.hero_health
+	var tick_damage: float = game.bleed_tick_damage
+	game._process_fury_bleed(0.01)
+	assert(is_equal_approx(
+		game.hero_health - health_before,
+		tick_damage * FuryRules.THIRSTING_WOUNDS_LEECH_RATIO,
+	))
+	print("Blood talent tests passed: bleed, DOT healing and bleed leech.")
 	quit()
