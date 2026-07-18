@@ -71,6 +71,14 @@ if ($version -notmatch '^4\.7(\.|$)') {
     Write-Warning "This project is pinned to Godot 4.7.x; detected $version."
 }
 
+Write-Host ""
+Write-Host "Scanning project and importing assets..." -ForegroundColor Cyan
+$global:LASTEXITCODE = 0
+& $godot --headless --editor --path $repoRoot --quit
+if ($LASTEXITCODE -ne 0) {
+    throw "Godot project scan failed with exit code ${LASTEXITCODE}."
+}
+
 if ($Quick) {
     $testFiles = @(
         "test_combat.gd",
