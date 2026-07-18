@@ -165,6 +165,19 @@ func _spender_damage_multiplier(skill_id: String) -> float:
 	return 1.0
 
 
+func _burst_spender_refund(
+	skill_id: String,
+	was_burst_active: bool,
+	rage_spent: float,
+) -> float:
+	if skill_id not in ["single_spender", "aoe_spender"] or not was_burst_active:
+		return 0.0
+	return FuryRules.endless_frenzy_refund(
+		rage_spent,
+		is_talent_enabled(FuryRules.ENDLESS_FRENZY_TALENT_ID),
+	)
+
+
 func _resolve_enemy_defeat() -> void:
 	if enemy_health > 0.0:
 		return

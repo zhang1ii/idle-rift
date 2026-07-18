@@ -133,7 +133,9 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 		notes.append("跳过 %d 个不可用技能" % skipped_count)
 	var burst_active := burst_skills_remaining > 0 and skill_id != "fury_burst"
 	var cost := _effective_rage_cost(skill)
+	var resource_before := hero_resource
 	hero_resource = maxf(0.0, hero_resource - cost)
+	var rage_spent := resource_before - hero_resource
 	skill_cooldowns[skill_id] = skill["cooldown"]
 
 	if skill_id == "fury_burst":
@@ -206,6 +208,10 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	elif skill_id == "aoe_spender":
 		_apply_bleed(0.22)
 		notes.append("施加 AOE 流血")
+	var refund := _burst_spender_refund(skill_id, burst_active, rage_spent)
+	if refund > 0.0:
+		hero_resource = minf(FuryRules.MAX_RAGE, hero_resource + refund)
+		notes.append("无尽狂潮返还 %.0f 怒意" % refund)
 	_consume_burst_charge(burst_active)
 	battle_event.text = "释放 %s，造成 %.0f 伤害" % [skill["name"], actual_damage]
 	if not notes.is_empty():
@@ -231,6 +237,14 @@ func _burst_charge_count() -> int:
 
 func _spender_damage_multiplier(_skill_id: String) -> float:
 	return 1.0
+
+
+func _burst_spender_refund(
+	_skill_id: String,
+	_was_burst_active: bool,
+	_rage_spent: float,
+) -> float:
+	return 0.0
 
 
 func _consume_burst_charge(was_active: bool) -> void:

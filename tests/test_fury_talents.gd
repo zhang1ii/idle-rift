@@ -31,6 +31,8 @@ func _run_tests() -> void:
 	assert(FuryRules.burst_charge_count(true) == 4)
 	assert(is_equal_approx(FuryRules.spender_talent_damage_multiplier(false), 1.0))
 	assert(is_equal_approx(FuryRules.spender_talent_damage_multiplier(true), 1.15))
+	assert(is_equal_approx(FuryRules.endless_frenzy_refund(40.0, false), 0.0))
+	assert(is_equal_approx(FuryRules.endless_frenzy_refund(40.0, true), 8.0))
 
 	var game = MainScene.instantiate()
 	root.add_child(game)
@@ -38,6 +40,7 @@ func _run_tests() -> void:
 	assert(game.set_talent_enabled(FuryRules.BOILING_SPIRIT_TALENT_ID, true))
 	assert(game.set_talent_enabled(FuryRules.CHAINED_BURST_TALENT_ID, true))
 	assert(game.set_talent_enabled(FuryRules.PRECISE_RELEASE_TALENT_ID, true))
+	assert(game.set_talent_enabled(FuryRules.ENDLESS_FRENZY_TALENT_ID, true))
 	game.current_floor = 1
 	game._start_battle()
 	assert(not game.set_talent_enabled(FuryRules.BOILING_SPIRIT_TALENT_ID, false))
@@ -78,5 +81,25 @@ func _run_tests() -> void:
 		0,
 	)
 	assert(is_equal_approx(health_before - game.enemy_health, expected_spender_damage))
-	print("Fury talent tests passed: rage, burst charges and spender damage.")
+
+	game.burst_skills_remaining = 1
+	game.hero_resource = 100.0
+	game.enemy_health = 1000.0
+	game.enemy_max_health = 1000.0
+	var burst_cost := (
+		float(FuryRules.skill_catalog()["single_spender"]["base_rage_cost"])
+		* (1.0 - FuryRules.burst_cost_reduction(game.hero_stats.mastery))
+	)
+	var expected_refund := FuryRules.endless_frenzy_refund(burst_cost, true)
+	game._cast_fury_skill(
+		"single_spender",
+		FuryRules.skill_catalog()["single_spender"],
+		0,
+	)
+	assert(is_equal_approx(
+		game.hero_resource,
+		100.0 - burst_cost + expected_refund,
+	))
+	assert(game.burst_skills_remaining == 0)
+	print("Fury talent tests passed: full Fury branch combat effects.")
 	quit()
