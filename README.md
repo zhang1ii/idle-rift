@@ -1,51 +1,72 @@
 # Idle Rift
 
-Idle Rift（工作名）是一款以自动战斗、装备掉落和离线收菜为核心的像素挂机 RPG。
+Idle Rift（工作名）是一款以自动战斗、装备掉落、Build 调整和离线收菜为核心的横版像素挂机 RPG。
 
-玩家选择当前挑战层数，英雄持续自动战斗并积累战利品。上线后的主要决策是鉴定、筛选和搭配装备，调整 Build，然后突破更高层数。
+玩家在战前选择五个技能并排列循环，英雄在屏幕左侧与右侧敌人自动战斗。普通层首次通关后可以反复 farm；每 5 层为守关 Boss。玩家通过装备、技能顺序、天赋和战前补给突破卡点。
 
 ## 当前状态
 
-项目处于概念验证阶段。首个垂直切片已经可以运行，包含自动战斗、循环敌人、基础装备掉落、背包和换装。现阶段继续验证三个问题：
+项目处于玩法垂直切片阶段，Godot 原型可以运行。目前已经建立：
 
-1. 自动战斗是否值得观看。
-2. 装备掉落是否让人期待。
-3. 换装后是否能明显推进更高层数。
+- 横版自动战斗、循环敌人和基础战斗表现。
+- 狂怒战士六选五技能、严格循环队列、怒意、流血、回血、泄怒和护盾。
+- 普通层、Boss 层、战前药水、死亡停止挂机和首个裂隙推进模型。
+- 13 个装备槽、5 个品质、随机词缀、背包、分解、打造和 2/4/5 套装规则的数据模型。
+- 三路线、四层、12 节点的狂怒战士天赋树；守关 Boss 首杀提供有限天赋点。
 
-当前装备支持普通、魔法和稀有品质，以及武器、头盔、胸甲、戒指和护符五个部位。传奇、套装、远古和神话装备将在基础掉落循环稳定后逐层加入。
+装备/天赋的部分正式规则仍只存在于数据模型和自动测试中，尚未全部接入可视化界面与实际战斗结算。准确边界见 [Codex 开发交接](docs/CODEX_HANDOFF.md)。
 
 ## 技术栈
 
-- Godot 4.x
+- Godot 4.7.1 stable
 - GDScript
-- 展开界面逻辑分辨率：960 × 540
+- 逻辑分辨率：640 × 360
 - 桌面目标分辨率：1280 × 720
 
 ## 启动
 
-1. 安装 Godot 4.x。
-2. 在 Godot Project Manager 中导入本目录的 `project.godot`。
-3. 运行项目，或在仓库根目录执行 `godot --path .`。
+1. 安装 Godot 4.7.x。
+2. 在 Godot Project Manager 中导入仓库根目录的 `project.godot`。
+3. 运行项目，或在仓库根目录执行：
+
+```powershell
+godot --path .
+```
 
 运行时按 `Esc` 收成桌面右下角挂机条，按 `Tab` 在挂机条与整备界面之间切换，按 `R` 打开远征结算。三个状态中战斗模拟都会继续运行。
 
-## 测试
+## 新电脑部署
 
-```bash
-godot --headless --path . --script res://tests/test_combat.gd
+完整的 Windows 安装、克隆、登录、验证和 Codex 对话恢复步骤见 [新电脑部署指南](docs/NEW_PC_SETUP.md)。推荐使用纯英文路径，例如：
+
+```text
+C:\dev\godotgame\idle-rift
 ```
 
-测试覆盖自动战斗推进、金币与掉落、裂隙等级增长，以及换装后属性立即生效。
+## 测试
+
+在 Windows PowerShell 中运行全部无界面测试：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\verify_windows.ps1
+```
+
+快速验证核心迁移链路：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\verify_windows.ps1 -Quick
+```
 
 ## 文档
 
 - [PRODUCT.md](PRODUCT.md)：产品方向与范围
 - [DESIGN.md](DESIGN.md)：视觉与交互原则
-- [docs/GDD.md](docs/GDD.md)：首版玩法设计
-- [docs/CLASSES.md](docs/CLASSES.md)：职业资源、战斗风味与装备方向
-- [docs/AI_TOOLCHAIN.md](docs/AI_TOOLCHAIN.md)：AI Agent 工具链计划
-- [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md)：像素资产规格、生成和审核流程
-- [docs/DATA_ARCHITECTURE.md](docs/DATA_ARCHITECTURE.md)：玩法配置、运行状态、规则和 UI 的分层约定
+- [docs/GDD.md](docs/GDD.md)：首版玩法规则
+- [docs/FURY_WARRIOR.md](docs/FURY_WARRIOR.md)：狂怒战士技能与数值
+- [docs/TALENT_SYSTEM.md](docs/TALENT_SYSTEM.md)：狂怒战士天赋树
+- [docs/EQUIPMENT_SYSTEM.md](docs/EQUIPMENT_SYSTEM.md)：装备、套装、分解和打造
+- [docs/PROGRESSION_MODEL.md](docs/PROGRESSION_MODEL.md)：楼层与 Boss 成长模型
+- [docs/CODEX_HANDOFF.md](docs/CODEX_HANDOFF.md)：本次对话的决策与开发交接
 
 ## 第三方资产
 
