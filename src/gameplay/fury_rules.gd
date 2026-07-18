@@ -18,10 +18,12 @@ const FURY_TALENT_IDS: Array[String] = [
 const CARVED_WOUNDS_TALENT_ID := "carved_wounds"
 const BLOOD_MEMORY_TALENT_ID := "blood_memory"
 const THIRSTING_WOUNDS_TALENT_ID := "thirsting_wounds"
+const CRIMSON_EXECUTION_TALENT_ID := "crimson_execution"
 const BLOOD_TALENT_IDS: Array[String] = [
 	CARVED_WOUNDS_TALENT_ID,
 	BLOOD_MEMORY_TALENT_ID,
 	THIRSTING_WOUNDS_TALENT_ID,
+	CRIMSON_EXECUTION_TALENT_ID,
 ]
 const THICK_SINEW_TALENT_ID := "thick_sinew"
 const STEADY_RAGE_TALENT_ID := "steady_rage"
@@ -45,6 +47,7 @@ const BASE_DOT_HEAL_CAP_RATIO := 0.35
 const BLOOD_MEMORY_CONVERSION_RATIO := 0.90
 const BLOOD_MEMORY_HEAL_CAP_RATIO := 0.40
 const THIRSTING_WOUNDS_LEECH_RATIO := 0.08
+const CRIMSON_EXECUTION_REMAINING_BLEED_RATIO := 0.40
 const STEADY_RAGE_HASTE_TO_BARRIER := 0.01
 const SHIELD_REFLOW_REFUND_RATIO := 0.20
 const IMMOVABLE_ABSORB_TO_DAMAGE := 0.40
@@ -155,6 +158,20 @@ static func dot_heal_cap_ratio(blood_memory_enabled: bool) -> float:
 
 static func bleed_leech_ratio(thirsting_wounds_enabled: bool) -> float:
 	return THIRSTING_WOUNDS_LEECH_RATIO if thirsting_wounds_enabled else 0.0
+
+
+static func remaining_bleed_burst_damage(
+	bleed_tick_damage: float,
+	ticks_remaining: int,
+	crimson_execution_enabled: bool,
+) -> float:
+	if not crimson_execution_enabled:
+		return 0.0
+	return (
+		maxf(0.0, bleed_tick_damage)
+		* maxi(0, ticks_remaining)
+		* CRIMSON_EXECUTION_REMAINING_BLEED_RATIO
+	)
 
 
 static func burst_cost_reduction(mastery_percent: float) -> float:

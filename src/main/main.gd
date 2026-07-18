@@ -203,6 +203,16 @@ func _bleed_leech_ratio() -> float:
 	)
 
 
+func _remaining_bleed_burst_damage(skill_id: String) -> float:
+	if skill_id not in ["single_spender", "aoe_spender"]:
+		return 0.0
+	return FuryRules.remaining_bleed_burst_damage(
+		bleed_tick_damage,
+		bleed_ticks_remaining,
+		is_talent_enabled(FuryRules.CRIMSON_EXECUTION_TALENT_ID),
+	)
+
+
 func _resolve_enemy_defeat() -> void:
 	if enemy_health > 0.0:
 		return

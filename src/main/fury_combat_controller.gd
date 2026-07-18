@@ -196,6 +196,10 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 		damage *= 2.0
 		notes.append("暴击")
 	if skill_id in ["single_spender", "aoe_spender"]:
+		var bleed_burst_damage := _remaining_bleed_burst_damage(skill_id)
+		if bleed_burst_damage > 0.0:
+			damage += bleed_burst_damage
+			notes.append("血潮终结附加 %.0f 流血伤害" % bleed_burst_damage)
 		var counter_damage := _spender_counter_damage(skill_id)
 		if counter_damage > 0.0:
 			damage += counter_damage
@@ -263,6 +267,10 @@ func _dot_heal_cap_ratio() -> float:
 
 
 func _bleed_leech_ratio() -> float:
+	return 0.0
+
+
+func _remaining_bleed_burst_damage(_skill_id: String) -> float:
 	return 0.0
 
 
