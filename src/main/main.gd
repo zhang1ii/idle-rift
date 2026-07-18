@@ -2,6 +2,7 @@ extends "res://src/main/fury_combat_controller.gd"
 
 
 const EquipmentInventoryModel = preload("res://src/gameplay/equipment_inventory.gd")
+const EquipmentEvaluator = preload("res://src/gameplay/equipment_evaluator.gd")
 const GameDataRepository = preload("res://src/data/game_data_repository.gd")
 const TalentTreeModelScript = preload("res://src/gameplay/talent_tree_model.gd")
 const TalentTreePanelScript = preload("res://src/ui/talent_tree_panel.gd")
@@ -20,6 +21,12 @@ var battle_view: FunctionalBattleView
 
 func _ready() -> void:
 	talent_tree.configure(GameDataRepository.new().talents()["trees"]["fury_warrior"])
+	# The vertical slice starts with its calibrated G4 reference set. Unlike the
+	# old hard-coded character sheet, every displayed/combat stat is now rebuilt
+	# from these thirteen concrete items and will change when one is replaced.
+	equipment_inventory.rng.seed = 20260718
+	equipment_inventory.seed_reference_loadout(4, "rare")
+	_apply_equipment_loadout(false)
 	super._ready()
 	equipment_inventory.rng.randomize()
 	print("Idle Rift equipment drops, backpack and talent hooks loaded.")
@@ -87,6 +94,30 @@ func reset_talents() -> bool:
 		return false
 	_sync_active_talents_from_tree()
 	return true
+
+
+func equip_inventory_item(index: int, requested_target := "") -> bool:
+	if battle_state == BattleState.FIGHTING:
+		return false
+	if not equipment_inventory.equip_inventory_item(index, requested_target):
+		return false
+	_apply_equipment_loadout(true)
+	_refresh_all_ui()
+	return true
+
+
+func _apply_equipment_loadout(preserve_health_ratio: bool) -> void:
+	var old_max_health := hero_stats.max_health()
+	var health_ratio := clampf(hero_health / old_max_health, 0.0, 1.0) \
+		if preserve_health_ratio and old_max_health > 0.0 else 1.0
+	var effective_tier := EquipmentEvaluator.average_power_tier(equipment_inventory.equipped)
+	hero_stats.apply_equipment_stats(
+		equipment_inventory.total_equipment_stats(),
+		effective_tier,
+	)
+	_apply_talent_stat_modifiers()
+	if preserve_health_ratio:
+		hero_health = hero_stats.max_health() * health_ratio
 
 
 func _on_talent_requested(talent_id: String) -> void:
@@ -308,6 +339,12 @@ func _refresh_combat_ui() -> void:
 	super._refresh_combat_ui()
 	if battle_view != null:
 		battle_view.sync_shield(hero_shield)
+	if run_summary != null:
+		run_summary.text += "\n装备 G%.2f · 背包 %d · 材料 %d" % [
+			hero_stats.gear_tier,
+			equipment_inventory.inventory.size(),
+			equipment_inventory.materials,
+		]
 
 
 func _spender_counter_damage(_skill_id: String) -> float:

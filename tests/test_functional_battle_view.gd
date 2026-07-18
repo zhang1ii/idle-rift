@@ -28,7 +28,7 @@ func _run_tests() -> void:
 	assert(game.hero_resource > float(game.skill_catalog["rage_builder"]["base_rage_gain"]))
 	game._refresh_combat_ui()
 	assert(is_equal_approx(game.hero_health_bar.value, game.hero_health))
-	assert(is_equal_approx(game.hero_resource_bar.value, game.hero_resource))
+	assert(absf(game.hero_resource_bar.value - game.hero_resource) <= game.hero_resource_bar.step)
 
 	var health_before: float = game.hero_health
 	game._take_hero_damage(20.0, "test")

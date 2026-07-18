@@ -31,6 +31,31 @@ func apply_reference_gear_tier(value: float) -> void:
 	versatility = stats.versatility
 
 
+func apply_equipment_stats(equipment_stats: Dictionary, effective_gear_tier: float) -> void:
+	gear_tier = maxf(0.0, effective_gear_tier)
+	strength = Progression.BASE_STRENGTH
+	agility = Progression.BASE_AGILITY
+	intellect = Progression.BASE_INTELLECT
+	match primary_stat:
+		"agility":
+			agility += float(equipment_stats.get("primary", 0.0))
+		"intellect":
+			intellect += float(equipment_stats.get("primary", 0.0))
+		_:
+			strength += float(equipment_stats.get("primary", 0.0))
+	stamina = Progression.BASE_STAMINA + float(equipment_stats.get("stamina", 0.0))
+	mastery = Progression.BASE_MASTERY + float(equipment_stats.get("mastery", 0.0))
+	haste = Progression.BASE_HASTE + float(equipment_stats.get("haste", 0.0))
+	critical_strike = (
+		Progression.BASE_CRITICAL_STRIKE
+		+ float(equipment_stats.get("critical_strike", 0.0))
+	)
+	versatility = (
+		Progression.BASE_VERSATILITY
+		+ float(equipment_stats.get("versatility", 0.0))
+	)
+
+
 func primary_value() -> float:
 	match primary_stat:
 		"agility":

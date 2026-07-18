@@ -33,6 +33,7 @@ func _run_tests() -> void:
 	var game = MainScene.instantiate()
 	root.add_child(game)
 	await process_frame
+	game.hero_stats.haste = 20.0
 	assert(game.set_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID, true))
 	game.current_floor = 5
 	game._start_battle()
