@@ -19,7 +19,8 @@ func _ready() -> void:
 func set_talent_enabled(talent_id: String, enabled: bool) -> bool:
 	if battle_state == BattleState.FIGHTING:
 		return false
-	if talent_id not in FuryRules.GUARD_TALENT_IDS:
+	if talent_id not in FuryRules.GUARD_TALENT_IDS \
+	and talent_id != FuryRules.BOILING_SPIRIT_TALENT_ID:
 		return false
 	if enabled and talent_id not in active_talent_ids:
 		active_talent_ids.append(talent_id)
@@ -141,6 +142,13 @@ func _spender_counter_damage(_skill_id: String) -> float:
 
 func _consume_spender_counter_damage(_skill_id: String) -> void:
 	immovable_counter_stored = 0.0
+
+
+func _builder_base_rage_bonus(skill_id: String) -> float:
+	if skill_id == "rage_builder" \
+	and is_talent_enabled(FuryRules.BOILING_SPIRIT_TALENT_ID):
+		return FuryRules.BOILING_SPIRIT_BASE_RAGE_BONUS
+	return 0.0
 
 
 func _resolve_enemy_defeat() -> void:

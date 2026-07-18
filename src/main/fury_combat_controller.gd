@@ -159,7 +159,11 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 		battle_event.text = "释放 %s · %s" % [skill["name"], "，".join(notes)]
 		return
 
-	var rage_gain := FuryRules.rage_gain(skill["base_rage_gain"], hero_stats.mastery)
+	var builder_bonus := _builder_base_rage_bonus(skill_id)
+	var base_rage_gain := float(skill["base_rage_gain"]) + builder_bonus
+	var rage_gain := FuryRules.rage_gain(base_rage_gain, hero_stats.mastery)
+	if builder_bonus > 0.0:
+		notes.append("沸腾血性额外攒怒")
 	if burst_active and rage_gain > 0.0:
 		rage_gain *= 1.0 + FuryRules.burst_gain_bonus(hero_stats.mastery)
 		notes.append("爆发强化攒怒")
@@ -211,6 +215,10 @@ func _spender_counter_damage(_skill_id: String) -> float:
 
 func _consume_spender_counter_damage(_skill_id: String) -> void:
 	pass
+
+
+func _builder_base_rage_bonus(_skill_id: String) -> float:
+	return 0.0
 
 
 func _consume_burst_charge(was_active: bool) -> void:

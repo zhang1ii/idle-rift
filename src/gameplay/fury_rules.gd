@@ -5,6 +5,7 @@ const MAX_RAGE := 100.0
 const ATTACK_COOLDOWN := 4.0
 const BLEED_TICKS := 4
 const BLEED_INTERVAL := 1.0
+const BOILING_SPIRIT_TALENT_ID := "boiling_spirit"
 const THICK_SINEW_TALENT_ID := "thick_sinew"
 const STEADY_RAGE_TALENT_ID := "steady_rage"
 const SHIELD_REFLOW_TALENT_ID := "shield_reflow"
@@ -16,6 +17,7 @@ const GUARD_TALENT_IDS: Array[String] = [
 	IMMOVABLE_TALENT_ID,
 ]
 const THICK_SINEW_HEALTH_MULTIPLIER := 1.08
+const BOILING_SPIRIT_BASE_RAGE_BONUS := 5.0
 const STEADY_RAGE_HASTE_TO_BARRIER := 0.01
 const SHIELD_REFLOW_REFUND_RATIO := 0.20
 const IMMOVABLE_ABSORB_TO_DAMAGE := 0.40
@@ -83,6 +85,12 @@ static func skill_catalog() -> Dictionary:
 
 static func rage_gain(base_gain: float, mastery_percent: float) -> float:
 	return base_gain * (1.0 + maxf(0.0, mastery_percent) / 100.0)
+
+
+static func builder_base_rage_gain(base_gain: float, boiling_spirit_enabled: bool) -> float:
+	return maxf(0.0, base_gain) + (
+		BOILING_SPIRIT_BASE_RAGE_BONUS if boiling_spirit_enabled else 0.0
+	)
 
 
 static func burst_gain_bonus(mastery_percent: float) -> float:
