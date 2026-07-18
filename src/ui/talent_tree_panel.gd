@@ -47,6 +47,7 @@ func _build_interface() -> void:
 		child.queue_free()
 	_talent_buttons.clear()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	z_index = 100
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	var dimmer := ColorRect.new()

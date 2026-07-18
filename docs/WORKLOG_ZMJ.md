@@ -105,6 +105,7 @@
 - `tests/test_progression_model.gd`
 - `tests/test_equipment_system.gd`
 - `tests/test_equipment_combat_stats.gd`
+- `tests/test_equipment_inventory_ui.gd`
 - `tests/simulate_progression_model.gd`
 - `tests/simulate_fury_loadouts.gd`
 - `tests/simulate_equipment_farm.gd`
@@ -131,7 +132,7 @@ godot --headless --path . --script res://tests/simulate_equipment_farm.gd
 
 以下部分尚未完成，协作者接手时不应视为已有功能：
 
-1. 可视化背包、角色装备栏、装备对比和打造界面。
+1. 定向普通装备与套装打造界面。
 2. 将套装 2/4/5 件效果和传奇首饰特效写回战斗角色。
 3. 存档、背包持久化、离线时间计算与离线结算界面。
 4. 第 10 层及后续 Boss 的独立机制、美术和关卡内容。
@@ -141,6 +142,8 @@ godot --headless --path . --script res://tests/simulate_equipment_farm.gd
 战前天赋树已经接入完整规则原型，支持三系四层、合法前置、免费洗点、终极互斥、Boss 首杀点数和战斗锁定。默认启动场景也已改由完整规则控制器驱动，并复用裂隙背景、角色/敌人动画、伤害数字、护盾和命中特效；旧独立模型只保留为表现对照，不再承接新玩法规则。
 
 实际穿戴的 13 件装备现在统一汇总到角色面板和战斗公式，战前换装会重建主属性、耐力和四项副属性，并保持当前生命百分比；战斗中禁止换装。
+
+`B` 键战前背包已经接入 13 槽穿戴、品质/评分、属性详情、可能提升目标、自动替换较弱槽、单件分解和批量清理；战斗中可查看但禁止改装。
 
 建议下一阶段优先顺序：背包/配装 UI → 套装效果接入 → 存档与离线结算 → 新职业与后续 Boss。
 

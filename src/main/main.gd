@@ -7,6 +7,7 @@ const GameDataRepository = preload("res://src/data/game_data_repository.gd")
 const TalentTreeModelScript = preload("res://src/gameplay/talent_tree_model.gd")
 const TalentTreePanelScript = preload("res://src/ui/talent_tree_panel.gd")
 const FunctionalBattleViewScene = preload("res://src/ui/functional_battle_view.tscn")
+const EquipmentInventoryPanelScript = preload("res://src/ui/equipment_inventory_panel.gd")
 
 var equipment_inventory = EquipmentInventoryModel.new()
 var talent_tree = TalentTreeModelScript.new()
@@ -16,6 +17,8 @@ var barrier_refund_pending := 0.0
 var immovable_counter_stored := 0.0
 var talent_toggle_button: Button
 var talent_panel: TalentTreePanel
+var equipment_toggle_button: Button
+var equipment_panel: EquipmentInventoryPanel
 var battle_view: FunctionalBattleView
 
 
@@ -46,6 +49,19 @@ func _build_interface() -> void:
 	talent_panel.reset_requested.connect(_on_talent_reset_requested)
 	talent_panel.close_requested.connect(_hide_talent_panel)
 	talent_panel.visible = false
+	equipment_toggle_button = _button("背包 [B]", 96, 23)
+	equipment_toggle_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	equipment_toggle_button.position = Vector2(-208, 37)
+	equipment_toggle_button.pressed.connect(_toggle_equipment_panel)
+	add_child(equipment_toggle_button)
+	equipment_panel = EquipmentInventoryPanelScript.new()
+	add_child(equipment_panel)
+	equipment_panel.setup(equipment_inventory)
+	equipment_panel.equip_requested.connect(_on_equipment_equip_requested)
+	equipment_panel.dismantle_requested.connect(_on_equipment_dismantle_requested)
+	equipment_panel.dismantle_non_upgrades_requested.connect(_on_dismantle_non_upgrades_requested)
+	equipment_panel.close_requested.connect(_hide_equipment_panel)
+	equipment_panel.visible = false
 
 
 func _build_arena(parent: Control) -> void:
@@ -70,8 +86,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event.keycode == KEY_TAB:
 		_toggle_talent_panel()
 		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_B:
+		_toggle_equipment_panel()
+		get_viewport().set_input_as_handled()
 	elif event.keycode == KEY_ESCAPE and talent_panel != null and talent_panel.visible:
 		_hide_talent_panel()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_ESCAPE and equipment_panel != null and equipment_panel.visible:
+		_hide_equipment_panel()
 		get_viewport().set_input_as_handled()
 
 
@@ -102,8 +124,42 @@ func equip_inventory_item(index: int, requested_target := "") -> bool:
 	if not equipment_inventory.equip_inventory_item(index, requested_target):
 		return false
 	_apply_equipment_loadout(true)
+	if equipment_panel != null:
+		equipment_panel.refresh()
 	_refresh_all_ui()
 	return true
+
+
+func dismantle_inventory_item(index: int) -> int:
+	if battle_state == BattleState.FIGHTING:
+		return 0
+	var gained := equipment_inventory.dismantle_inventory_item(index)
+	if equipment_panel != null:
+		equipment_panel.refresh()
+	_refresh_all_ui()
+	return gained
+
+
+func dismantle_non_upgrades() -> int:
+	if battle_state == BattleState.FIGHTING:
+		return 0
+	var gained := equipment_inventory.dismantle_non_upgrades()
+	if equipment_panel != null:
+		equipment_panel.refresh()
+	_refresh_all_ui()
+	return gained
+
+
+func _on_equipment_equip_requested(index: int) -> void:
+	equip_inventory_item(index)
+
+
+func _on_equipment_dismantle_requested(index: int) -> void:
+	dismantle_inventory_item(index)
+
+
+func _on_dismantle_non_upgrades_requested() -> void:
+	dismantle_non_upgrades()
 
 
 func _apply_equipment_loadout(preserve_health_ratio: bool) -> void:
@@ -144,12 +200,27 @@ func _toggle_talent_panel() -> void:
 		return
 	talent_panel.visible = not talent_panel.visible
 	if talent_panel.visible:
+		_hide_equipment_panel()
 		talent_panel.refresh()
 
 
 func _hide_talent_panel() -> void:
 	if talent_panel != null:
 		talent_panel.visible = false
+
+
+func _toggle_equipment_panel() -> void:
+	if equipment_panel == null:
+		return
+	equipment_panel.visible = not equipment_panel.visible
+	if equipment_panel.visible:
+		_hide_talent_panel()
+		equipment_panel.set_locked(battle_state == BattleState.FIGHTING)
+
+
+func _hide_equipment_panel() -> void:
+	if equipment_panel != null:
+		equipment_panel.visible = false
 
 
 func set_talent_enabled(talent_id: String, enabled: bool) -> bool:
@@ -183,9 +254,12 @@ func _start_battle() -> void:
 	immovable_counter_stored = 0.0
 	talent_tree.begin_battle()
 	_hide_talent_panel()
+	_hide_equipment_panel()
 	super._start_battle()
 	if talent_panel != null:
 		talent_panel.refresh()
+	if equipment_panel != null:
+		equipment_panel.set_locked(true)
 
 
 func _return_to_preparation(message: String) -> void:
@@ -193,6 +267,8 @@ func _return_to_preparation(message: String) -> void:
 	super._return_to_preparation(message)
 	if talent_panel != null:
 		talent_panel.refresh()
+	if equipment_panel != null:
+		equipment_panel.set_locked(false)
 
 
 func _collapse_all_platforms() -> void:
@@ -200,6 +276,8 @@ func _collapse_all_platforms() -> void:
 	talent_tree.end_battle()
 	if talent_panel != null:
 		talent_panel.refresh()
+	if equipment_panel != null:
+		equipment_panel.set_locked(false)
 
 
 func _on_boss_defeated() -> void:
@@ -212,6 +290,8 @@ func _on_boss_defeated() -> void:
 		battle_event.text += " · 获得 %d 点天赋（共 %d 点）" % [awarded, talent_tree.point_budget]
 	if talent_panel != null:
 		talent_panel.refresh()
+	if equipment_panel != null:
+		equipment_panel.set_locked(false)
 
 
 func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
@@ -434,9 +514,11 @@ func _resolve_enemy_defeat() -> void:
 		_on_boss_defeated()
 		battle_event.text += " 获得：%s。" % EquipmentInventoryModel.Rules.item_display_name(last_dropped_item)
 		loot_count += 1
+		_refresh_equipment_panel_if_visible()
 		return
 	ordinary_kills += 1
 	last_dropped_item = equipment_inventory.roll_normal_drop(current_floor)
+	_refresh_equipment_panel_if_visible()
 	respawn_timer = NORMAL_RESPAWN_DELAY
 	enemy_name.text = "正在寻找下一名敌人……"
 	if last_dropped_item.is_empty():
@@ -448,3 +530,8 @@ func _resolve_enemy_defeat() -> void:
 		EquipmentInventoryModel.Rules.item_display_name(last_dropped_item),
 		upgrade_mark,
 	]
+
+
+func _refresh_equipment_panel_if_visible() -> void:
+	if equipment_panel != null and equipment_panel.visible:
+		equipment_panel.refresh()
