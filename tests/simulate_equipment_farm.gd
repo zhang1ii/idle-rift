@@ -19,7 +19,7 @@ func _init() -> void:
 func _simulate_mode(offline: bool) -> void:
 	var kills := floori(FARM_SECONDS / SECONDS_PER_KILL)
 	var total_world_drops := 0.0
-	var total_crafts := 0.0
+	var total_gold := 0.0
 	var total_raw_tier := 0.0
 	var total_power_tier := 0.0
 	var ready_count := 0
@@ -29,7 +29,6 @@ func _simulate_mode(offline: bool) -> void:
 		inventory.rng.seed = 1000 + sample
 		inventory.seed_reference_loadout(1, "rare")
 		var world_drops := 0
-		var crafts := 0
 		for ignored_kill in range(kills):
 			var item := inventory.roll_normal_drop(FARM_FLOOR, offline)
 			if item.is_empty():
@@ -37,28 +36,20 @@ func _simulate_mode(offline: bool) -> void:
 			world_drops += 1
 			if inventory.is_potential_upgrade(item):
 				inventory.equip_newest_if_upgrade()
-			inventory.dismantle_non_upgrades()
-		while inventory.materials >= inventory.normal_craft_cost(FARM_FLOOR):
-			var target := inventory.weakest_target()
-			var crafted := inventory.craft_normal_item(target, FARM_FLOOR)
-			if crafted.is_empty():
-				break
-			crafts += 1
-			inventory.equip_newest_if_upgrade()
-			inventory.dismantle_non_upgrades()
+			inventory.sell_non_upgrades()
 		var power_tier := Evaluator.average_power_tier(inventory.equipped)
 		total_world_drops += world_drops
-		total_crafts += crafts
+		total_gold += inventory.gold
 		total_raw_tier += inventory.average_item_tier()
 		total_power_tier += power_tier
 		if power_tier >= 3.0:
 			ready_count += 1
 		if power_tier >= 3.5:
 			strong_count += 1
-	print("%s 2h | world drops %.1f | crafts %.1f | raw G %.2f | effective G %.2f | G>=3 %.1f%% | G>=3.5 %.1f%%" % [
+	print("%s 2h | world drops %.1f | sale gold %.1f | raw G %.2f | effective G %.2f | G>=3 %.1f%% | G>=3.5 %.1f%%" % [
 		"Offline" if offline else "Online",
 		total_world_drops / SAMPLE_COUNT,
-		total_crafts / SAMPLE_COUNT,
+		total_gold / SAMPLE_COUNT,
 		total_raw_tier / SAMPLE_COUNT,
 		total_power_tier / SAMPLE_COUNT,
 		100.0 * ready_count / SAMPLE_COUNT,

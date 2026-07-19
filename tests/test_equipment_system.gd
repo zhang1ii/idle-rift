@@ -39,17 +39,18 @@ func _init() -> void:
 	assert(inventory.equipped.weapon.item_tier == 4)
 	var junk := inventory.add_item(Rules.create_normal_item(inventory.rng, 1, "weapon", "common"))
 	assert(not inventory.is_potential_upgrade(junk))
-	var material_before: int = inventory.materials
-	inventory.dismantle_inventory_item(inventory.inventory.size() - 1)
-	assert(inventory.materials > material_before)
+	var gold_before: int = inventory.gold
+	var sale_value := inventory.sell_inventory_item(inventory.inventory.size() - 1)
+	assert(sale_value > 0)
+	assert(inventory.gold == gold_before + sale_value)
 
 	var loadout := {}
 	for index in range(5):
 		var slot: String = Rules.ARMOR_SLOTS[index]
-		loadout[slot] = Rules.create_set_item(rng, 6, "bloodrage", index >= 3, slot)
+		loadout[slot] = Rules.create_set_item(rng, 6, "bloodrage", slot)
 	for index in range(5, 7):
 		var slot: String = Rules.ARMOR_SLOTS[index]
-		loadout[slot] = Rules.create_set_item(rng, 6, "iron_vow", false, slot)
+		loadout[slot] = Rules.create_set_item(rng, 6, "iron_vow", slot)
 	var bonuses := Rules.active_set_bonuses(loadout)
 	assert(bonuses.size() == 4)
 	assert(_has_bonus(bonuses, "bloodrage", 2))
@@ -57,15 +58,8 @@ func _init() -> void:
 	assert(_has_bonus(bonuses, "bloodrage", 5))
 	assert(_has_bonus(bonuses, "iron_vow", 2))
 	var five_piece := _find_bonus(bonuses, "bloodrage", 5)
-	assert(five_piece.power < 1.0)
-	assert(five_piece.power > Rules.CRAFTED_SET_POWER)
-
-	inventory.materials = 1000
-	var crafted := inventory.craft_set_item("head", 6, "bloodrage")
-	assert(not crafted.is_empty())
-	assert(crafted.crafted)
-	assert(is_equal_approx(crafted.set_power, Rules.CRAFTED_SET_POWER))
-	print("Equipment tests passed: 13 slots, qualities, backpack, dismantling, crafting, and 2/4/5 sets.")
+	assert(is_equal_approx(five_piece.power, Rules.SET_POWER))
+	print("Equipment tests passed: 13 slots, qualities, backpack sales, drop-only items, and 2/4/5 sets.")
 	quit()
 
 

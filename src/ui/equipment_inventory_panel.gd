@@ -3,8 +3,8 @@ extends Control
 
 
 signal equip_requested(inventory_index: int)
-signal dismantle_requested(inventory_index: int)
-signal dismantle_non_upgrades_requested
+signal sell_requested(inventory_index: int)
+signal sell_non_upgrades_requested
 signal close_requested
 
 const Rules = preload("res://src/gameplay/equipment_rules.gd")
@@ -34,7 +34,7 @@ var _equipped_grid: GridContainer
 var _inventory_list: VBoxContainer
 var _detail_label: Label
 var _equip_button: Button
-var _dismantle_button: Button
+var _sell_button: Button
 var _cleanup_button: Button
 var _equipped_buttons: Dictionary = {}
 var _inventory_buttons: Array[Button] = []
@@ -55,8 +55,8 @@ func refresh() -> void:
 	if model == null or _summary_label == null:
 		return
 	_selected_inventory_index = mini(_selected_inventory_index, model.inventory.size() - 1)
-	_summary_label.text = "已穿戴 %d / 13    背包 %d    材料 %d" % [
-		model.equipped.size(), model.inventory.size(), model.materials,
+	_summary_label.text = "已穿戴 %d / 13    背包 %d    金币 %d" % [
+		model.equipped.size(), model.inventory.size(), model.gold,
 	]
 	_lock_label.text = "战斗中只读" if locked else "战前可管理"
 	_lock_label.modulate = Color("df7b67") if locked else Color("79c8a0")
@@ -167,11 +167,11 @@ func _build_inventory_section() -> Control:
 	_equip_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_equip_button.pressed.connect(_request_equip)
 	actions.add_child(_equip_button)
-	_dismantle_button = _button("分解", 50, 23)
-	_dismantle_button.pressed.connect(_request_dismantle)
-	actions.add_child(_dismantle_button)
-	_cleanup_button = _button("清理非提升", 76, 23)
-	_cleanup_button.pressed.connect(dismantle_non_upgrades_requested.emit)
+	_sell_button = _button("出售", 64, 23)
+	_sell_button.pressed.connect(_request_sell)
+	actions.add_child(_sell_button)
+	_cleanup_button = _button("出售非提升", 76, 23)
+	_cleanup_button.pressed.connect(sell_non_upgrades_requested.emit)
 	actions.add_child(_cleanup_button)
 	return panel
 
@@ -262,7 +262,10 @@ func _refresh_action_buttons() -> void:
 		and _selected_inventory_index < model.inventory.size()
 	)
 	_equip_button.disabled = locked or not has_selection
-	_dismantle_button.disabled = locked or not has_selection
+	_sell_button.disabled = locked or not has_selection
+	_sell_button.text = "出售 +%d" % model.sell_value(
+		model.inventory[_selected_inventory_index]
+	) if has_selection else "出售"
 	_cleanup_button.disabled = locked or model.inventory.is_empty()
 
 
@@ -271,9 +274,9 @@ func _request_equip() -> void:
 		equip_requested.emit(_selected_inventory_index)
 
 
-func _request_dismantle() -> void:
+func _request_sell() -> void:
 	if not locked and _selected_inventory_index >= 0:
-		dismantle_requested.emit(_selected_inventory_index)
+		sell_requested.emit(_selected_inventory_index)
 
 
 func _item_detail(item: Dictionary) -> String:
@@ -282,15 +285,13 @@ func _item_detail(item: Dictionary) -> String:
 		affixes.append("%s %.1f" % [AFFIX_NAMES[affix_id], float(item.affixes[affix_id])])
 	var set_text := ""
 	if not String(item.set_id).is_empty():
-		set_text = " · %s%s" % [
-			Rules.SET_DEFINITIONS[item.set_id].name,
-			"（打造 70%）" if bool(item.crafted) else "",
-		]
-	return "%s T%d · 主属性 %.1f · 耐力 %.1f · %s%s" % [
+		set_text = " · %s" % Rules.SET_DEFINITIONS[item.set_id].name
+	return "%s T%d · 主属性 %.1f · 耐力 %.1f · %s%s · 售价 %d金币" % [
 		Rules.QUALITY_DATA[item.quality].name, int(item.item_tier),
 		float(item.primary), float(item.stamina),
 		" / ".join(affixes) if not affixes.is_empty() else "无词缀",
 		set_text,
+		model.sell_value(item),
 	]
 
 

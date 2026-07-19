@@ -27,9 +27,9 @@
 | 十三槽装备 | 1 武器、8 护甲、2 戒指、2 饰品，并按部位权重分配属性预算 | 已完成 |
 | 品质与词缀 | 白装无词缀；绿、蓝、紫、橙装有两条不重复副属性；部分橙色首饰有特效 | 已完成 |
 | 套装模型 | 护甲套装在 2/4/5 件触发，支持 5+2、4+4、4+2 等组合 | 已完成 |
-| 弱化打造套装 | 打造件可补齐套装，但单件只贡献 70% 套装效果 | 已完成 |
+| 纯掉落装备 | 普通装备来自敌人或 Boss，套装只由 Boss 掉落 | 已完成 |
 | 背包数据层 | 掉落进入背包、潜在提升判断、手动装备、双戒指/饰品槽比较 | 已完成 |
-| 分解与打造 | 无用装备分解为材料，可定向打造普通装备或较弱套装 | 已完成 |
+| 出售与金币 | 无用装备出售为金币，与药水系统共用玩家钱包 | 已完成 |
 | 在线/离线模型 | 离线只 farm 已稳定通关普通层，收益为在线的 60% | 已完成 |
 | 自动化验证 | 战斗回归、装备规则、Boss 跨阶级、技能组合与两小时 farm 模拟 | 已完成 |
 
@@ -70,12 +70,12 @@
 
 ## 5. 两小时 farm 模型
 
-普通敌人每次击杀有 3% 独立装备掉落率。模拟从一套稀有 T1 装备开始，在第 4 层 farm 两小时，包含自动选择提升、分解无用装备和定向打造最弱部位。
+普通敌人每次击杀有 3% 独立装备掉落率。模拟从一套稀有 T1 装备开始，在第 4 层 farm 两小时，包含自动选择提升和出售无用装备，不包含任何装备打造。
 
-| 模式 | 平均世界掉落 | 平均打造 | 平均有效 G | G≥3 | G≥3.5 |
+| 模式 | 平均世界掉落 | 平均出售金币 | 平均有效 G | G≥3 | G≥3.5 |
 |---|---:|---:|---:|---:|---:|
-| 在线 2 小时 | 46.7 | 7.6 | 4.00 | 100% | 94.3% |
-| 离线 2 小时 | 28.5 | 4.6 | 3.68 | 98.0% | 68.3% |
+| 在线 2 小时 | 46.7 | 248.1 | 3.82 | 98.3% | 81.0% |
+| 离线 2 小时 | 28.5 | 161.1 | 3.28 | 73.0% | 26.3% |
 
 这使在线 farm 两小时基本可以完成第 5 层 Boss 的标准配装；离线仍然有明显成长，但接近毕业的概率显著更低。
 
@@ -94,7 +94,8 @@
 
 - `src/gameplay/progression_model.gd`：楼层、Boss、装备阶级成长曲线。
 - `src/gameplay/equipment_rules.gd`：装备槽、品质、词缀和套装规则。
-- `src/gameplay/equipment_inventory.gd`：背包、穿戴、分解和打造。
+- `src/gameplay/equipment_inventory.gd`：背包、穿戴、出售和掉落。
+- `src/gameplay/player_wallet.gd`：装备出售与药水购买共用的金币钱包。
 - `src/gameplay/equipment_evaluator.gd`：实际属性到有效装备阶级的换算。
 
 ### 测试与模拟
@@ -115,7 +116,7 @@
 以下测试均已使用 Godot 4.7.1 headless 模式通过：
 
 ```text
-Equipment tests passed: 13 slots, qualities, backpack, dismantling, crafting, and 2/4/5 sets.
+Equipment tests passed: 13 slots, qualities, backpack sales, drop-only items, and 2/4/5 sets.
 Progression model tests passed: 13-slot budgets, scaling, and boss wall thresholds.
 Combat tests passed: six-pick-five Fury kit and boss timeline.
 ```
@@ -132,7 +133,7 @@ godot --headless --path . --script res://tests/simulate_equipment_farm.gd
 
 以下部分尚未完成，协作者接手时不应视为已有功能：
 
-1. 定向普通装备与套装打造界面。
+1. 装备耐久、损耗与金币维修规则。
 2. 将套装 2/4/5 件效果和传奇首饰特效写回战斗角色。
 3. 存档、背包持久化、离线时间计算与离线结算界面。
 4. 第 10 层及后续 Boss 的独立机制、美术和关卡内容。
@@ -143,13 +144,13 @@ godot --headless --path . --script res://tests/simulate_equipment_farm.gd
 
 实际穿戴的 13 件装备现在统一汇总到角色面板和战斗公式，战前换装会重建主属性、耐力和四项副属性，并保持当前生命百分比；战斗中禁止换装。
 
-`B` 键战前背包已经接入 13 槽穿戴、品质/评分、属性详情、可能提升目标、自动替换较弱槽、单件分解和批量清理；战斗中可查看但禁止改装。
+`B` 键战前背包已经接入 13 槽穿戴、品质/评分、属性详情、可能提升目标、自动替换较弱槽、单件出售和批量出售非提升；战斗中可查看但禁止改装。
 
-建议下一阶段优先顺序：背包/配装 UI → 套装效果接入 → 存档与离线结算 → 新职业与后续 Boss。
+建议下一阶段优先顺序：套装效果接入 → 装备耐久与金币维修 → 存档与离线结算 → 新职业与后续 Boss。
 
 ## 9. 设计文档索引
 
 - `docs/COMBAT_SYSTEM.md`：自动战斗与技能调度。
 - `docs/FURY_WARRIOR.md`：狂怒战士技能设计。
 - `docs/PROGRESSION_MODEL.md`：楼层与 Boss 成长模型。
-- `docs/EQUIPMENT_SYSTEM.md`：十三槽装备、品质、套装、分解和打造。
+- `docs/EQUIPMENT_SYSTEM.md`：十三槽装备、品质、套装、出售和金币。

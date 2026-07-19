@@ -3,13 +3,15 @@ extends "res://src/main/fury_combat_controller.gd"
 
 const EquipmentInventoryModel = preload("res://src/gameplay/equipment_inventory.gd")
 const EquipmentEvaluator = preload("res://src/gameplay/equipment_evaluator.gd")
+const PlayerWalletModel = preload("res://src/gameplay/player_wallet.gd")
 const GameDataRepository = preload("res://src/data/game_data_repository.gd")
 const TalentTreeModelScript = preload("res://src/gameplay/talent_tree_model.gd")
 const TalentTreePanelScript = preload("res://src/ui/talent_tree_panel.gd")
 const FunctionalBattleViewScene = preload("res://src/ui/functional_battle_view.tscn")
 const EquipmentInventoryPanelScript = preload("res://src/ui/equipment_inventory_panel.gd")
 
-var equipment_inventory = EquipmentInventoryModel.new()
+var player_wallet = PlayerWalletModel.new()
+var equipment_inventory = EquipmentInventoryModel.new(player_wallet)
 var talent_tree = TalentTreeModelScript.new()
 var last_dropped_item: Dictionary = {}
 var active_talent_ids: Array[String] = []
@@ -58,8 +60,8 @@ func _build_interface() -> void:
 	add_child(equipment_panel)
 	equipment_panel.setup(equipment_inventory)
 	equipment_panel.equip_requested.connect(_on_equipment_equip_requested)
-	equipment_panel.dismantle_requested.connect(_on_equipment_dismantle_requested)
-	equipment_panel.dismantle_non_upgrades_requested.connect(_on_dismantle_non_upgrades_requested)
+	equipment_panel.sell_requested.connect(_on_equipment_sell_requested)
+	equipment_panel.sell_non_upgrades_requested.connect(_on_sell_non_upgrades_requested)
 	equipment_panel.close_requested.connect(_hide_equipment_panel)
 	equipment_panel.visible = false
 
@@ -130,20 +132,20 @@ func equip_inventory_item(index: int, requested_target := "") -> bool:
 	return true
 
 
-func dismantle_inventory_item(index: int) -> int:
+func sell_inventory_item(index: int) -> int:
 	if battle_state == BattleState.FIGHTING:
 		return 0
-	var gained := equipment_inventory.dismantle_inventory_item(index)
+	var gained := equipment_inventory.sell_inventory_item(index)
 	if equipment_panel != null:
 		equipment_panel.refresh()
 	_refresh_all_ui()
 	return gained
 
 
-func dismantle_non_upgrades() -> int:
+func sell_non_upgrades() -> int:
 	if battle_state == BattleState.FIGHTING:
 		return 0
-	var gained := equipment_inventory.dismantle_non_upgrades()
+	var gained := equipment_inventory.sell_non_upgrades()
 	if equipment_panel != null:
 		equipment_panel.refresh()
 	_refresh_all_ui()
@@ -154,12 +156,12 @@ func _on_equipment_equip_requested(index: int) -> void:
 	equip_inventory_item(index)
 
 
-func _on_equipment_dismantle_requested(index: int) -> void:
-	dismantle_inventory_item(index)
+func _on_equipment_sell_requested(index: int) -> void:
+	sell_inventory_item(index)
 
 
-func _on_dismantle_non_upgrades_requested() -> void:
-	dismantle_non_upgrades()
+func _on_sell_non_upgrades_requested() -> void:
+	sell_non_upgrades()
 
 
 func _apply_equipment_loadout(preserve_health_ratio: bool) -> void:
@@ -420,10 +422,10 @@ func _refresh_combat_ui() -> void:
 	if battle_view != null:
 		battle_view.sync_shield(hero_shield)
 	if run_summary != null:
-		run_summary.text += "\n装备 G%.2f · 背包 %d · 材料 %d" % [
+		run_summary.text += "\n装备 G%.2f · 背包 %d · 金币 %d" % [
 			hero_stats.gear_tier,
 			equipment_inventory.inventory.size(),
-			equipment_inventory.materials,
+			player_wallet.gold,
 		]
 
 

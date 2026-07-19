@@ -30,20 +30,20 @@ func _run_tests() -> void:
 	game.equipment_panel._request_equip()
 	assert(game.equipment_inventory.equipped.weapon.item_tier == 8)
 	assert(game.equipment_inventory.inventory.size() == 2)
-	var materials_before: int = game.equipment_inventory.materials
+	var gold_before: int = game.equipment_inventory.gold
 	game.equipment_panel._select_inventory_item(0)
-	game.equipment_panel._request_dismantle()
+	game.equipment_panel._request_sell()
 	assert(game.equipment_inventory.inventory.size() == 1)
-	assert(game.equipment_inventory.materials > materials_before)
+	assert(game.equipment_inventory.gold > gold_before)
 
 	game._start_battle()
 	game._toggle_equipment_panel()
 	assert(game.equipment_panel.visible)
 	assert(game.equipment_panel.locked)
 	assert(game.equipment_panel._equip_button.disabled)
-	assert(game.equipment_panel._dismantle_button.disabled)
-	assert(game.dismantle_inventory_item(0) == 0)
+	assert(game.equipment_panel._sell_button.disabled)
+	assert(game.sell_inventory_item(0) == 0)
 	assert(game.equipment_inventory.inventory.size() == 1)
 
-	print("Equipment UI tests passed: 13 slots, equip, dismantle, exclusive panels and battle lock.")
+	print("Equipment UI tests passed: 13 slots, equip, sales, exclusive panels and battle lock.")
 	quit()

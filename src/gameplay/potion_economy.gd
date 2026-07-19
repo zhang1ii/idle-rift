@@ -2,23 +2,31 @@ class_name PotionEconomy
 extends RefCounted
 
 
+const Wallet = preload("res://src/gameplay/player_wallet.gd")
+
 var potion_config: Dictionary
 var potion_count := 0
-var gold := 0
+var wallet: PlayerWallet
 var material_count := 0
 var shop_tier := 1
 var total_shop_purchases := 0
+
+var gold: int:
+	get:
+		return wallet.gold
 
 
 func _init(
 	configuration: Dictionary,
 	starting_gold := 0,
 	starting_materials := 0,
+	shared_wallet: PlayerWallet = null,
 ) -> void:
 	potion_config = configuration.duplicate(true)
 	assert(potion_config.has("economy"), "Potion economy configuration is required.")
 	potion_count = int(potion_config.get("starting_count", 0))
-	gold = maxi(0, starting_gold)
+	wallet = shared_wallet if shared_wallet != null else Wallet.new()
+	wallet.deposit(starting_gold)
 	material_count = maxi(0, starting_materials)
 
 
@@ -37,13 +45,13 @@ func shop_price() -> int:
 
 func buy_potion() -> Dictionary:
 	var price := shop_price()
-	if gold < price:
+	if not wallet.can_afford(price):
 		return {
 			"success": false,
 			"reason": "insufficient_gold",
 			"price": price,
 		}
-	gold -= price
+	wallet.spend(price)
 	potion_count += 1
 	total_shop_purchases += 1
 	return {
@@ -62,10 +70,10 @@ func craft_potion() -> Dictionary:
 	var output := int(craft["output"])
 	if material_count < material_cost:
 		return {"success": false, "reason": "insufficient_materials"}
-	if gold < gold_cost:
+	if not wallet.can_afford(gold_cost):
 		return {"success": false, "reason": "insufficient_gold"}
 	material_count -= material_cost
-	gold -= gold_cost
+	wallet.spend(gold_cost)
 	potion_count += output
 	return {
 		"success": true,

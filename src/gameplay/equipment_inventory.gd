@@ -3,19 +3,22 @@ extends RefCounted
 
 
 const Rules = preload("res://src/gameplay/equipment_rules.gd")
-
-const NORMAL_CRAFT_BASE_COST := 30
-const SET_CRAFT_BASE_COST := 80
+const Wallet = preload("res://src/gameplay/player_wallet.gd")
 
 var rng := RandomNumberGenerator.new()
 var inventory: Array[Dictionary] = []
 var equipped: Dictionary = {}
-var materials := 0
+var wallet: PlayerWallet
 var next_instance_id := 1
 var total_drops := 0
 
+var gold: int:
+	get:
+		return wallet.gold
 
-func _init() -> void:
+
+func _init(shared_wallet: PlayerWallet = null) -> void:
+	wallet = shared_wallet if shared_wallet != null else Wallet.new()
 	rng.randomize()
 
 
@@ -92,55 +95,27 @@ func equip_newest_if_upgrade() -> bool:
 	return equip_inventory_item(index)
 
 
-func dismantle_inventory_item(index: int) -> int:
+func sell_inventory_item(index: int) -> int:
 	if index < 0 or index >= inventory.size():
 		return 0
 	var item: Dictionary = inventory[index]
-	var gained := dismantle_value(item)
-	materials += gained
+	var gained := sell_value(item)
+	wallet.deposit(gained)
 	inventory.remove_at(index)
 	return gained
 
 
-func dismantle_value(item: Dictionary) -> int:
-	var base_value: int = Rules.QUALITY_DATA[item.quality].material
+func sell_value(item: Dictionary) -> int:
+	var base_value: int = Rules.QUALITY_DATA[item.quality].sell_base
 	return base_value + ceili(float(item.item_tier) * 0.5)
 
 
-func dismantle_non_upgrades() -> int:
+func sell_non_upgrades() -> int:
 	var gained := 0
 	for index in range(inventory.size() - 1, -1, -1):
 		if not is_potential_upgrade(inventory[index]):
-			gained += dismantle_inventory_item(index)
+			gained += sell_inventory_item(index)
 	return gained
-
-
-func normal_craft_cost(item_tier: int) -> int:
-	return NORMAL_CRAFT_BASE_COST + maxi(0, item_tier) * 2
-
-
-func set_craft_cost(item_tier: int) -> int:
-	return SET_CRAFT_BASE_COST + maxi(0, item_tier) * 4
-
-
-func craft_normal_item(slot_id: String, item_tier: int) -> Dictionary:
-	if slot_id not in Rules.EQUIPMENT_TARGETS:
-		return {}
-	var cost := normal_craft_cost(item_tier)
-	if materials < cost:
-		return {}
-	materials -= cost
-	return add_item(Rules.create_normal_item(rng, item_tier, slot_id, "rare"))
-
-
-func craft_set_item(slot_id: String, item_tier: int, set_id: String) -> Dictionary:
-	if slot_id not in Rules.ARMOR_SLOTS or not Rules.SET_DEFINITIONS.has(set_id):
-		return {}
-	var cost := set_craft_cost(item_tier)
-	if materials < cost:
-		return {}
-	materials -= cost
-	return add_item(Rules.create_set_item(rng, item_tier, set_id, true, slot_id))
 
 
 func seed_reference_loadout(item_tier: int, quality := "rare") -> void:

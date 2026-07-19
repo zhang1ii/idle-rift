@@ -30,8 +30,7 @@ const SET_THRESHOLDS: Array[int] = [2, 4, 5]
 const ONLINE_DROP_CHANCE := 0.03
 const OFFLINE_EFFICIENCY := 0.60
 const REPEAT_BOSS_SET_CHANCE := 0.35
-const CRAFTED_SET_POWER := 0.70
-const BOSS_SET_POWER := 1.00
+const SET_POWER := 1.00
 
 const SLOT_WEIGHTS := {
 	"weapon": 1.50,
@@ -68,23 +67,23 @@ const QUALITY_ORDER: Array[String] = [
 const QUALITY_DATA := {
 	"common": {
 		"name": "普通", "base_multiplier": 0.70,
-		"affix_min": 0.0, "affix_max": 0.0, "material": 1,
+		"affix_min": 0.0, "affix_max": 0.0, "sell_base": 1,
 	},
 	"uncommon": {
 		"name": "优秀", "base_multiplier": 0.85,
-		"affix_min": 0.70, "affix_max": 0.85, "material": 3,
+		"affix_min": 0.70, "affix_max": 0.85, "sell_base": 3,
 	},
 	"rare": {
 		"name": "稀有", "base_multiplier": 1.00,
-		"affix_min": 0.85, "affix_max": 1.00, "material": 7,
+		"affix_min": 0.85, "affix_max": 1.00, "sell_base": 7,
 	},
 	"epic": {
 		"name": "史诗", "base_multiplier": 1.12,
-		"affix_min": 1.00, "affix_max": 1.15, "material": 15,
+		"affix_min": 1.00, "affix_max": 1.15, "sell_base": 15,
 	},
 	"legendary": {
 		"name": "传说", "base_multiplier": 1.25,
-		"affix_min": 1.15, "affix_max": 1.35, "material": 30,
+		"affix_min": 1.15, "affix_max": 1.35, "sell_base": 30,
 	},
 }
 
@@ -192,7 +191,6 @@ static func create_normal_item(
 		"special_effect": special_effect,
 		"set_id": "",
 		"set_power": 0.0,
-		"crafted": false,
 	}
 
 
@@ -200,7 +198,6 @@ static func create_set_item(
 	rng: RandomNumberGenerator,
 	item_tier: int,
 	set_id: String,
-	crafted := false,
 	forced_slot := "",
 ) -> Dictionary:
 	assert(SET_DEFINITIONS.has(set_id))
@@ -224,8 +221,7 @@ static func create_set_item(
 		"affixes": affixes,
 		"special_effect": "",
 		"set_id": set_id,
-		"set_power": CRAFTED_SET_POWER if crafted else BOSS_SET_POWER,
-		"crafted": crafted,
+		"set_power": SET_POWER,
 	}
 
 
