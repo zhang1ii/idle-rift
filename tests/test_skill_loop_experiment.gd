@@ -17,9 +17,9 @@ func _run_tests() -> void:
 	root.add_child(game)
 	await process_frame
 
-	assert(game.initial_prototype_item_count == 3)
-	assert(game.equipment_inventory.inventory.size() == 3)
-	for effect_id in Effects.all_ids():
+	assert(game.initial_prototype_item_count == Effects.all_ids().size())
+	assert(game.equipment_inventory.inventory.size() == Effects.all_ids().size())
+	for effect_id in Effects.result_ids():
 		assert(_equip_effect(game, effect_id))
 		assert(game.equipment_inventory.has_special_effect(effect_id))
 	assert(game.equipment_inventory.active_loop_effect_ids().size() == 3)
@@ -84,7 +84,7 @@ func _run_tests() -> void:
 	assert("失败诊断" in game.last_failure_diagnostic)
 	assert("输出不足" in game.last_failure_diagnostic)
 
-	print("Skill loop experiment tests passed: completion, break, legendaries, boss disruption and diagnostics.")
+	print("Skill loop experiment tests passed: completion, break, result legendaries, boss disruption and diagnostics.")
 	quit()
 
 

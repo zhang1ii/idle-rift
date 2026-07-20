@@ -2,6 +2,7 @@ extends SceneTree
 
 
 const MainScene = preload("res://src/main/combat_prototype.tscn")
+const Effects = preload("res://src/gameplay/legendary_loop_effects.gd")
 const OUTPUT_DIR := "C:/tmp/idle-rift-preview"
 
 
@@ -17,19 +18,29 @@ func _capture_previews() -> void:
 	_save_viewport("preparation.png")
 
 	game._toggle_equipment_panel()
-	game.equipment_panel._select_inventory_item(0)
+	var lone_index := _find_effect_index(game, Effects.LONE_CORE)
+	game.equipment_panel._select_inventory_item(lone_index)
 	await _settle_frames()
-	_save_viewport("loop_legendary_backpack.png")
+	_save_viewport("rule_legendary_backpack.png")
 
+	var fuser_index := _find_effect_index(game, Effects.RIFT_FUSER)
+	game.equip_inventory_item(fuser_index, "ring_1")
 	game._toggle_equipment_panel()
 	game.current_floor = 5
 	game._start_battle()
 	game._cast_next_boss_ability()
 	await _settle_frames()
-	_save_viewport("boss_slot_disruption.png")
+	_save_viewport("boss_fusion_disruption.png")
 
 	print("UI previews captured at %s" % OUTPUT_DIR)
 	quit()
+
+
+func _find_effect_index(game, effect_id: String) -> int:
+	for index in game.equipment_inventory.inventory.size():
+		if String(game.equipment_inventory.inventory[index].get("special_effect", "")) == effect_id:
+			return index
+	return -1
 
 
 func _settle_frames() -> void:
