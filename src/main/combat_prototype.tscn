@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource path="res://src/main/main.gd" type="Script" id="1_main"]
+[ext_resource path="res://src/main/loop_experiment_controller.gd" type="Script" id="1_main"]
 [ext_resource path="res://assets/fonts/NotoSansSC-IdleRift.ttf" type="FontFile" id="2_font"]
 
 [node name="Main" type="Control"]

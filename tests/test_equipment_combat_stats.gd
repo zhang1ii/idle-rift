@@ -15,6 +15,8 @@ func _run_tests() -> void:
 	root.add_child(game)
 	await process_frame
 	assert(game.equipment_inventory.equipped.size() == 13)
+	var initial_inventory_count: int = game.equipment_inventory.inventory.size()
+	assert(initial_inventory_count == game.initial_prototype_item_count)
 	var totals: Dictionary = game.equipment_inventory.total_equipment_stats()
 	assert(is_equal_approx(
 		game.hero_stats.strength,
@@ -46,7 +48,7 @@ func _run_tests() -> void:
 		game.hero_health / game.hero_stats.max_health(),
 		0.55,
 	))
-	assert(game.equipment_inventory.inventory.size() == 1)
+	assert(game.equipment_inventory.inventory.size() == initial_inventory_count + 1)
 
 	game._start_battle()
 	game.equipment_inventory.add_item(EquipmentRules.create_normal_item(
@@ -58,5 +60,5 @@ func _run_tests() -> void:
 	assert(not game.equip_inventory_item(game.equipment_inventory.inventory.size() - 1))
 	assert(game.equipment_inventory.equipped.weapon.item_tier == 8)
 
-	print("Equipment combat stats tests passed: 13 real items, stat rebuild, health ratio and battle lock.")
+	print("Equipment combat stats tests passed: real items, loop showcases, stat rebuild, health ratio and battle lock.")
 	quit()
