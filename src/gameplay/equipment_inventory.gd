@@ -15,6 +15,10 @@ var total_drops := 0
 var gold: int:
 	get:
 		return wallet.gold
+var rift_tokens: int:
+	get:
+		return wallet.rift_tokens
+
 
 
 func _init(shared_wallet: PlayerWallet = null) -> void:
@@ -29,7 +33,7 @@ func roll_normal_drop(floor_number: int, offline := false) -> Dictionary:
 	if rng.randf() >= chance:
 		return {}
 	var item_tier := maxi(1, floor_number)
-	var item := Rules.create_normal_item(rng, item_tier)
+	var item := Rules.create_floor_item(rng, item_tier, floor_number)
 	return add_item(item)
 
 
@@ -104,6 +108,23 @@ func sell_inventory_item(index: int) -> int:
 	inventory.remove_at(index)
 	return gained
 
+func recycle_inventory_item(index: int) -> int:
+	if index < 0 or index >= inventory.size():
+		return 0
+	var item: Dictionary = inventory[index]
+	if not can_recycle(item):
+		return 0
+	var gained := recycle_value(item)
+	wallet.deposit_tokens(gained)
+	inventory.remove_at(index)
+	return gained
+
+func can_recycle(item: Dictionary) -> bool:
+	return not String(item.get("set_id", "")).is_empty() or not String(item.get("special_effect", "")).is_empty()
+
+func recycle_value(item: Dictionary) -> int:
+	return 5 if not String(item.get("special_effect", "")).is_empty() else 3
+
 
 func sell_value(item: Dictionary) -> int:
 	var base_value: int = Rules.QUALITY_DATA[item.quality].sell_base
@@ -155,6 +176,14 @@ func total_equipment_stats() -> Dictionary:
 
 func active_set_bonuses() -> Array[Dictionary]:
 	return Rules.active_set_bonuses(equipped)
+
+
+
+func has_set_bonus(set_id: String, threshold: int) -> bool:
+	for bonus in active_set_bonuses():
+		if String(bonus.set_id) == set_id and int(bonus.threshold) == threshold:
+			return true
+	return false
 
 
 func weakest_target() -> String:

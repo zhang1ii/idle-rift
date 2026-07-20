@@ -113,7 +113,7 @@ func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
 		if hero_resource <= 0.0:
 			return false
 		if Rules.is_boss_floor(current_floor):
-			var next_ability := BossRules.ABILITY_CYCLE[boss_ability_cursor]
+			var next_ability := BossRules.ability_cycle(current_floor)[boss_ability_cursor]
 			return next_ability == "heavy_attack" \
 				and boss_ability_timer <= _current_action_interval() * 1.75
 		return hero_health <= hero_stats.max_health() * 0.50
@@ -172,6 +172,7 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	if burst_active and rage_gain > 0.0:
 		rage_gain *= 1.0 + FuryRules.burst_gain_bonus(hero_stats.mastery)
 		notes.append("爆发强化攒怒")
+	rage_gain *= _rage_gain_multiplier()
 	hero_resource = minf(FuryRules.MAX_RAGE, hero_resource + rage_gain)
 	if rage_gain > 0.0:
 		notes.append("获得 %.0f 怒意" % rage_gain)
@@ -181,6 +182,7 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 		* skill["damage_multiplier"]
 		* hero_stats.outgoing_multiplier()
 	)
+	var bleed_echo_damage := 0.0
 	if skill_id in ["single_spender", "aoe_spender"]:
 		damage *= FuryRules.mastery_damage_multiplier(hero_stats.mastery)
 		notes.append("精通强化泄怒")
@@ -188,6 +190,7 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 		if spender_multiplier > 1.0:
 			damage *= spender_multiplier
 			notes.append("精准倾泻提高伤害")
+		bleed_echo_damage = _spender_bleed_echo_damage(skill_id)
 	if intimidation_actions > 0:
 		damage *= 1.0 - BossRules.INTIMIDATION_DAMAGE_PENALTY
 		intimidation_actions -= 1
@@ -208,6 +211,11 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	var actual_damage := _apply_damage_to_enemy(damage)
 	if boss_guard_charges == 0 and actual_damage < damage:
 		notes.append("外骨骼减伤")
+	if bleed_echo_damage > 0.0 and enemy_health > 0.0:
+		var actual_echo := _apply_damage_to_enemy(bleed_echo_damage)
+		actual_damage += actual_echo
+		notes.append("血痕战甲额外触发 %.0f 流血伤害" % actual_echo)
+
 
 	if skill_id == "rage_builder":
 		_apply_bleed(0.18)
@@ -254,8 +262,23 @@ func _burst_spender_refund(
 	return 0.0
 
 
+func _rage_gain_multiplier() -> float:
+	return 1.0
+
 func _bleed_damage_multiplier() -> float:
 	return 1.0
+
+func _bleed_critical_chance() -> float:
+	return 0.0
+
+func _bleed_critical_multiplier() -> float:
+	return 1.0
+
+func _spender_bleed_echo_damage(_skill_id: String) -> float:
+	return 0.0
+
+func _on_burst_charge_consumed(_remaining_charges: int) -> void:
+	pass
 
 
 func _dot_heal_conversion_ratio() -> float:
@@ -277,6 +300,7 @@ func _remaining_bleed_burst_damage(_skill_id: String) -> float:
 func _consume_burst_charge(was_active: bool) -> void:
 	if was_active:
 		burst_skills_remaining = maxi(0, burst_skills_remaining - 1)
+		_on_burst_charge_consumed(burst_skills_remaining)
 
 
 func _apply_bleed(tick_multiplier: float) -> void:
@@ -300,6 +324,8 @@ func _process_fury_bleed(delta: float) -> void:
 	bleed_tick_timer += FuryRules.BLEED_INTERVAL
 	bleed_ticks_remaining -= 1
 	var damage := bleed_tick_damage
+	if rng.randf() < _bleed_critical_chance():
+		damage *= _bleed_critical_multiplier()
 	if intimidation_actions > 0:
 		damage *= 1.0 - BossRules.INTIMIDATION_DAMAGE_PENALTY
 	var actual_damage := _apply_damage_to_enemy(damage)
@@ -341,9 +367,12 @@ func _take_hero_damage(raw_damage: float, source_name: String) -> void:
 
 
 func _cast_next_boss_ability() -> void:
-	var ability_id := BossRules.ABILITY_CYCLE[boss_ability_cursor]
-	boss_ability_cursor = (boss_ability_cursor + 1) % BossRules.ABILITY_CYCLE.size()
+	var cycle := BossRules.ability_cycle(current_floor)
+	var ability_id := cycle[boss_ability_cursor]
+	boss_ability_cursor = (boss_ability_cursor + 1) % cycle.size()
 	match ability_id:
+		"reverse_loop":
+			_apply_reverse_loop()
 		"slow":
 			platforms_remaining -= 1
 			floor_slow_stacks += 1
@@ -358,6 +387,10 @@ func _cast_next_boss_ability() -> void:
 		"defense":
 			boss_guard_charges = 1
 			battle_event.text = "Boss 硬化外骨骼：下一次受到的伤害降低 70%。"
+
+func _apply_reverse_loop() -> void:
+	battle_event.text = "Boss 施加逆序刻印：接下来五次技能按 5→1 反向扫描。"
+
 
 
 func _collapse_all_platforms() -> void:
@@ -417,7 +450,7 @@ func _refresh_combat_ui() -> void:
 	hero_action.text = "间隔 %.2fs · 爆发强化剩余 %d 技能" % [
 		_current_action_interval(), burst_skills_remaining]
 	if Rules.is_boss_floor(current_floor):
-		var next_ability := BossRules.ABILITY_CYCLE[boss_ability_cursor]
+		var next_ability := BossRules.ability_cycle(current_floor)[boss_ability_cursor]
 		enemy_action.text = "地块 %d/%d · 下个：%s（%.1fs）" % [
 			platforms_remaining, BossRules.PLATFORM_COUNT,
 			BossRules.ability_name(next_ability), boss_ability_timer]

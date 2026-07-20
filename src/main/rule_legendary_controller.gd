@@ -36,7 +36,7 @@ func _hero_take_action() -> void:
 	var skipped := PackedStringArray()
 	var fusion_echoes: Array[String] = []
 	for offset in skill_order.size():
-		var index := (skill_cursor + offset) % skill_order.size()
+		var index := _scan_index(offset)
 		var skill_id := skill_order[index]
 		var skill: Dictionary = skill_catalog[skill_id]
 		if _consume_boss_disruption(index):
@@ -53,11 +53,12 @@ func _hero_take_action() -> void:
 			continue
 		pending_fusion_echo_ids.assign(fusion_echoes)
 		var outcome := loop_tracker.record_cast(index, skipped.size())
-		skill_cursor = (index + 1) % skill_order.size()
+		skill_cursor = posmod(index + skill_scan_direction, skill_order.size())
 		_cast_fury_skill(skill_id, skill, skipped.size())
 		fusion_casts += fusion_echoes.size()
 		pending_fusion_echo_ids.clear()
 		_resolve_loop_outcome(outcome)
+		_after_successful_cycle_cast()
 		return
 	pending_fusion_echo_ids.clear()
 	if loop_tracker.progress > 0:
@@ -86,14 +87,14 @@ func _apply_rule_attack_bonuses(dealt: float, unavailable_other: int) -> void:
 	var notes := PackedStringArray()
 	if equipment_inventory.has_special_effect(LegendaryEffects.LONE_CORE):
 		last_scarcity_unavailable = unavailable_other
-		var scarcity_ratio := LegendaryEffects.scarcity_bonus_ratio(unavailable_other)
+		var scarcity_ratio: float = LegendaryEffects.scarcity_bonus_ratio(unavailable_other) * equipment_inventory.special_effect_power(LegendaryEffects.LONE_CORE)
 		if scarcity_ratio > 0.0:
 			bonus_ratio += scarcity_ratio
 			notes.append("孤鸣核心%d格" % unavailable_other)
 	if equipment_inventory.has_special_effect(LegendaryEffects.COUNTER_PLATING) \
 	and counter_plating_charges > 0:
 		counter_plating_charges -= 1
-		bonus_ratio += LegendaryEffects.COUNTER_ATTACK_RATIO
+		bonus_ratio += LegendaryEffects.COUNTER_ATTACK_RATIO * equipment_inventory.special_effect_power(LegendaryEffects.COUNTER_PLATING)
 		notes.append("反震装甲")
 	if bonus_ratio <= 0.0 or enemy_health <= 0.0:
 		return
@@ -103,7 +104,7 @@ func _apply_rule_attack_bonuses(dealt: float, unavailable_other: int) -> void:
 
 
 func _cast_next_boss_ability() -> void:
-	var ability_id: String = BossRules.ABILITY_CYCLE[boss_ability_cursor]
+	var ability_id: String = BossRules.ability_cycle(current_floor)[boss_ability_cursor]
 	var disrupted_slot := -1
 	if ability_id == "slow":
 		disrupted_slot = BOSS_DISRUPTION_SLOT_ORDER[
@@ -173,6 +174,18 @@ func _unavailable_other_skill_count(current_skill_id: String) -> int:
 	return unavailable
 
 
+func _spender_damage_multiplier(skill_id: String) -> float:
+	var multiplier := super._spender_damage_multiplier(skill_id)
+	if _is_sourceless_mode() and skill_id in ["single_spender", "aoe_spender"]:
+		multiplier *= equipment_inventory.special_effect_power(LegendaryEffects.SOURCELESS_FURNACE)
+	return multiplier
+
+func _fusion_ratio() -> float:
+	return FUSION_RATIO * equipment_inventory.special_effect_power(LegendaryEffects.RIFT_FUSER)
+
+
+
+
 func _resolve_fusion_echo(skill_id: String) -> void:
 	var skill: Dictionary = skill_catalog[skill_id]
 	skill_cooldowns[skill_id] = maxf(
@@ -182,7 +195,7 @@ func _resolve_fusion_echo(skill_id: String) -> void:
 	var detail := ""
 	match skill_id:
 		"fury_burst":
-			var charges := maxi(1, roundi(_burst_charge_count() * FUSION_RATIO))
+			var charges := maxi(1, roundi(_burst_charge_count() * _fusion_ratio()))
 			burst_skills_remaining = maxi(burst_skills_remaining, charges)
 			detail = "获得%d层爆发强化" % charges
 		"dot_heal":
@@ -191,7 +204,7 @@ func _resolve_fusion_echo(skill_id: String) -> void:
 			detail = _resolve_fused_barrier()
 		_:
 			detail = _resolve_fused_attack(skill_id, skill)
-	battle_event.text += " · 熔接【%s】70%%：%s" % [skill["name"], detail]
+	battle_event.text += " · 熔接【%s】%d%%：%s" % [skill["name"], roundi(_fusion_ratio() * 100.0), detail]
 
 
 func _resolve_fused_heal() -> String:
@@ -199,9 +212,9 @@ func _resolve_fused_heal() -> String:
 	var healing := minf(
 		bank_before * _dot_heal_conversion_ratio(),
 		hero_stats.max_health() * _dot_heal_cap_ratio(),
-	) * FUSION_RATIO
+	) * _fusion_ratio()
 	hero_health = minf(hero_stats.max_health(), hero_health + healing)
-	dot_damage_bank = bank_before * (1.0 - FUSION_RATIO)
+	dot_damage_bank = bank_before * (1.0 - _fusion_ratio())
 	return "恢复%.0f生命" % healing
 
 
@@ -211,14 +224,14 @@ func _resolve_fused_barrier() -> String:
 		rage_spent,
 		hero_stats.haste,
 		is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID),
-	) * FUSION_RATIO
+	) * _fusion_ratio() * _barrier_amount_multiplier()
 	hero_shield = minf(
 		FuryRules.barrier_cap(hero_stats.max_health()),
 		hero_shield + barrier,
 	)
 	hero_resource = 0.0
 	if is_talent_enabled(FuryRules.SHIELD_REFLOW_TALENT_ID):
-		barrier_refund_pending += FuryRules.shield_reflow_refund(rage_spent) * FUSION_RATIO
+		barrier_refund_pending += FuryRules.shield_reflow_refund(rage_spent) * _fusion_ratio()
 	return "转化%.0f护盾" % barrier
 
 
@@ -227,7 +240,7 @@ func _resolve_fused_attack(skill_id: String, skill: Dictionary) -> String:
 		hero_stats.attack_power()
 		* float(skill["damage_multiplier"])
 		* hero_stats.outgoing_multiplier()
-		* FUSION_RATIO
+		* _fusion_ratio()
 	)
 	if skill_id in ["single_spender", "aoe_spender"]:
 		damage *= FuryRules.mastery_damage_multiplier(hero_stats.mastery)
@@ -238,7 +251,7 @@ func _resolve_fused_attack(skill_id: String, skill: Dictionary) -> String:
 		var rage_gain := FuryRules.rage_gain(
 			float(skill["base_rage_gain"]) + _builder_base_rage_bonus(skill_id),
 			hero_stats.mastery,
-		) * FUSION_RATIO
+		) * _fusion_ratio()
 		hero_resource = minf(FuryRules.MAX_RAGE, hero_resource + rage_gain)
 		_apply_fusion_bleed(0.18)
 		notes.append("获得%.0f怒意并施加流血" % rage_gain)
@@ -256,7 +269,7 @@ func _apply_fusion_bleed(tick_multiplier: float) -> void:
 		* hero_stats.outgoing_multiplier()
 		* FuryRules.mastery_damage_multiplier(hero_stats.mastery)
 		* _bleed_damage_multiplier()
-		* FUSION_RATIO
+		* _fusion_ratio()
 	)
 	bleed_tick_damage = maxf(bleed_tick_damage, candidate_damage)
 	bleed_ticks_remaining = maxi(bleed_ticks_remaining, FuryRules.BLEED_TICKS)

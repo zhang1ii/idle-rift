@@ -15,10 +15,26 @@ const ABILITY_CYCLE: Array[String] = [
 	"heavy_attack",
 	"defense",
 ]
+const FLOOR_TEN_ABILITY_CYCLE: Array[String] = [
+	"reverse_loop",
+	"intimidation",
+	"heavy_attack",
+	"defense",
+	"slow",
+]
+
+
+
+static func ability_cycle(floor_number: int) -> Array[String]:
+	if floor_number == 10:
+		return FLOOR_TEN_ABILITY_CYCLE
+	return ABILITY_CYCLE
 
 
 static func ability_name(ability_id: String) -> String:
 	match ability_id:
+		"reverse_loop":
+			return "逆序刻印"
 		"slow":
 			return "迟缓·碎裂地板"
 		"intimidation":

@@ -27,6 +27,8 @@ var last_heavy_attack_at := -1.0
 var last_heavy_absorbed := 0.0
 var last_failure_diagnostic := ""
 var initial_prototype_item_count := 0
+var skill_scan_direction := 1
+var reverse_casts_remaining := 0
 
 
 func _ready() -> void:
@@ -56,13 +58,16 @@ func _start_battle() -> void:
 	last_heavy_attack_at = -1.0
 	last_heavy_absorbed = 0.0
 	last_failure_diagnostic = ""
+	skill_scan_direction = 1
+	reverse_casts_remaining = 0
+	loop_tracker.set_direction(1)
 	super._start_battle()
 
 
 func _hero_take_action() -> void:
 	var skipped := PackedStringArray()
 	for offset in skill_order.size():
-		var index := (skill_cursor + offset) % skill_order.size()
+		var index := _scan_index(offset)
 		var skill_id := skill_order[index]
 		var skill: Dictionary = skill_catalog[skill_id]
 		if _consume_boss_disruption(index):
@@ -74,9 +79,10 @@ func _hero_take_action() -> void:
 			_record_skill_skip(skill_id)
 			continue
 		var outcome := loop_tracker.record_cast(index, skipped.size())
-		skill_cursor = (index + 1) % skill_order.size()
+		skill_cursor = posmod(index + skill_scan_direction, skill_order.size())
 		_cast_fury_skill(skill_id, skill, skipped.size())
 		_resolve_loop_outcome(outcome)
+		_after_successful_cycle_cast()
 		return
 	if loop_tracker.progress > 0:
 		_resolve_loop_outcome(loop_tracker.record_wait())
@@ -98,11 +104,11 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 	if equipment_inventory.has_special_effect(LegendaryEffects.RIFT_METRONOME) \
 	and loop_echo_charges > 0:
 		loop_echo_charges -= 1
-		bonus_ratio += METRONOME_ECHO_RATIO
+		bonus_ratio += METRONOME_ECHO_RATIO * equipment_inventory.special_effect_power(LegendaryEffects.RIFT_METRONOME)
 		notes.append("裂隙节拍器回响")
 	if equipment_inventory.has_special_effect(LegendaryEffects.FRACTURE_GEAR) \
 	and fracture_gear_stacks > 0:
-		bonus_ratio += FRACTURE_GEAR_DAMAGE_PER_STACK * fracture_gear_stacks
+		bonus_ratio += FRACTURE_GEAR_DAMAGE_PER_STACK * fracture_gear_stacks * equipment_inventory.special_effect_power(LegendaryEffects.FRACTURE_GEAR)
 		notes.append("断链齿轮%d层" % fracture_gear_stacks)
 		fracture_gear_stacks = 0
 	if bonus_ratio <= 0.0:
@@ -115,7 +121,7 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 
 
 func _cast_next_boss_ability() -> void:
-	var ability_id := BossRules.ABILITY_CYCLE[boss_ability_cursor]
+	var ability_id := BossRules.ability_cycle(current_floor)[boss_ability_cursor]
 	var disrupted_slot := -1
 	if ability_id == "slow":
 		disrupted_slot = BOSS_DISRUPTION_SLOT_ORDER[
@@ -128,6 +134,48 @@ func _cast_next_boss_ability() -> void:
 		boss_disrupted_slots.get(disrupted_slot, 0)) + 1
 	battle_event.text += " 第%d技能格裂化，下次扫描必定跳过。" % (disrupted_slot + 1)
 	_refresh_skill_order_ui()
+
+
+func _apply_reverse_loop() -> void:
+	skill_scan_direction = -1
+	reverse_casts_remaining = skill_order.size()
+	skill_cursor = skill_order.size() - 1
+	loop_tracker.set_direction(-1)
+	battle_event.text = "Boss 施加逆序刻印：队列翻转为 5→4→3→2→1。"
+	_refresh_skill_order_ui()
+
+func _scan_index(offset: int) -> int:
+	return posmod(skill_cursor + offset * skill_scan_direction, skill_order.size())
+
+func _after_successful_cycle_cast() -> void:
+	if reverse_casts_remaining <= 0:
+		return
+	reverse_casts_remaining -= 1
+	if reverse_casts_remaining > 0:
+		return
+	skill_scan_direction = 1
+	skill_cursor = 0
+	loop_tracker.set_direction(1)
+	battle_event.text += " · 逆序结束，恢复 1→5"
+	_refresh_skill_order_ui()
+
+
+func exchange_weakened_effect(effect_id: String) -> Dictionary:
+	if battle_state == BattleState.FIGHTING:
+		return {}
+	var item: Dictionary = equipment_inventory.exchange_weakened_effect(
+		effect_id,
+		maxi(1, current_floor + 1),
+	)
+	if not item.is_empty():
+		battle_event.text = "使用徽记兑换【%s】弱化版。" % LegendaryEffects.effect_name(effect_id)
+	if equipment_panel != null:
+		equipment_panel.refresh()
+	_refresh_all_ui()
+	return item
+
+func _on_exchange_requested(effect_id: String) -> void:
+	exchange_weakened_effect(effect_id)
 
 
 func _take_hero_damage(raw_damage: float, source_name: String) -> void:
@@ -183,6 +231,8 @@ func _refresh_skill_order_ui() -> void:
 			skill_labels[index].text += "  [裂化：下次跳过]"
 
 
+		if reverse_casts_remaining > 0:
+			skill_labels[index].text += "  [逆序]"
 func _refresh_combat_ui() -> void:
 	super._refresh_combat_ui()
 	if hero_action != null and battle_state == BattleState.FIGHTING:
@@ -197,6 +247,8 @@ func _refresh_combat_ui() -> void:
 	var active_names := _active_effect_names()
 	if run_summary != null and not active_names.is_empty():
 		run_summary.text += "\n循环特效：%s" % "、".join(active_names)
+	if enemy_action != null and reverse_casts_remaining > 0:
+		enemy_action.text += " · 逆序剩余%d次" % reverse_casts_remaining
 
 
 func _resolve_loop_outcome(outcome: Dictionary) -> void:
@@ -218,7 +270,8 @@ func _resolve_loop_outcome(outcome: Dictionary) -> void:
 		battle_event.text += "，裂隙节拍器已充能"
 	if equipment_inventory.has_special_effect(LegendaryEffects.BLOOD_CLOSED_LOOP) \
 	and enemy_health > 0.0 and bleed_ticks_remaining > 0:
-		var bleed_echo := bleed_tick_damage * bleed_ticks_remaining * BLOOD_CLOSED_LOOP_RATIO
+		var bleed_echo: float = bleed_tick_damage * bleed_ticks_remaining * BLOOD_CLOSED_LOOP_RATIO \
+			* equipment_inventory.special_effect_power(LegendaryEffects.BLOOD_CLOSED_LOOP)
 		var actual := _apply_damage_to_enemy(bleed_echo)
 		battle_event.text += "，血色闭环结算%.0f流血" % actual
 		_resolve_enemy_defeat()
@@ -300,6 +353,8 @@ func _replace_equipment_panel() -> void:
 	if equipment_panel != null:
 		equipment_panel.queue_free()
 	equipment_panel = LoopEquipmentPanelScript.new()
+	equipment_panel.recycle_requested.connect(_on_equipment_recycle_requested)
+	equipment_panel.exchange_requested.connect(_on_exchange_requested)
 	add_child(equipment_panel)
 	equipment_panel.setup(equipment_inventory)
 	equipment_panel.equip_requested.connect(_on_equipment_equip_requested)

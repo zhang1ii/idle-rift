@@ -17,6 +17,9 @@ var last_dropped_item: Dictionary = {}
 var active_talent_ids: Array[String] = []
 var barrier_refund_pending := 0.0
 var immovable_counter_stored := 0.0
+var iron_vow_guard_charges := 0
+var iron_vow_guard_time := 0.0
+var iron_vow_cooldown := 0.0
 var talent_toggle_button: Button
 var talent_panel: TalentTreePanel
 var equipment_toggle_button: Button
@@ -62,6 +65,7 @@ func _build_interface() -> void:
 	equipment_panel.equip_requested.connect(_on_equipment_equip_requested)
 	equipment_panel.sell_requested.connect(_on_equipment_sell_requested)
 	equipment_panel.sell_non_upgrades_requested.connect(_on_sell_non_upgrades_requested)
+	equipment_panel.recycle_requested.connect(_on_equipment_recycle_requested)
 	equipment_panel.close_requested.connect(_hide_equipment_panel)
 	equipment_panel.visible = false
 
@@ -141,6 +145,17 @@ func sell_inventory_item(index: int) -> int:
 	_refresh_all_ui()
 	return gained
 
+func recycle_inventory_item(index: int) -> int:
+	if battle_state == BattleState.FIGHTING:
+		return 0
+	var gained := equipment_inventory.recycle_inventory_item(index)
+	if equipment_panel != null:
+		equipment_panel.refresh()
+	_refresh_all_ui()
+	return gained
+
+
+
 
 func sell_non_upgrades() -> int:
 	if battle_state == BattleState.FIGHTING:
@@ -159,6 +174,10 @@ func _on_equipment_equip_requested(index: int) -> void:
 func _on_equipment_sell_requested(index: int) -> void:
 	sell_inventory_item(index)
 
+
+
+func _on_equipment_recycle_requested(index: int) -> void:
+	recycle_inventory_item(index)
 
 func _on_sell_non_upgrades_requested() -> void:
 	sell_non_upgrades()
@@ -257,6 +276,9 @@ func _start_battle() -> void:
 	talent_tree.begin_battle()
 	_hide_talent_panel()
 	_hide_equipment_panel()
+	iron_vow_guard_charges = 0
+	iron_vow_guard_time = 0.0
+	iron_vow_cooldown = 0.0
 	super._start_battle()
 	if talent_panel != null:
 		talent_panel.refresh()
@@ -305,13 +327,17 @@ func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
 
 
 func _tick_skill_cooldowns(delta: float) -> void:
+	iron_vow_guard_time = maxf(0.0, iron_vow_guard_time - delta)
+	iron_vow_cooldown = maxf(0.0, iron_vow_cooldown - delta)
 	var steady_rage := is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID)
+	var frenzy_recovery := 1.15 if burst_skills_remaining > 0 \
+		and equipment_inventory.has_set_bonus("frenzy_tide", 4) else 1.0
 	for skill_id in skill_cooldowns:
 		var recovery_multiplier := FuryRules.cooldown_recovery_multiplier(
 			skill_id,
 			hero_stats.haste,
 			steady_rage,
-		)
+		) * frenzy_recovery
 		skill_cooldowns[skill_id] = maxf(
 			0.0,
 			skill_cooldowns[skill_id] - delta * recovery_multiplier,
@@ -341,7 +367,7 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 		rage_spent,
 		hero_stats.haste,
 		is_talent_enabled(FuryRules.STEADY_RAGE_TALENT_ID),
-	)
+	) * _barrier_amount_multiplier()
 	hero_shield = minf(
 		FuryRules.barrier_cap(hero_stats.max_health()),
 		hero_shield + barrier_gained,
@@ -368,10 +394,17 @@ func _take_hero_damage(raw_damage: float, source_name: String) -> void:
 	var health_before := hero_health
 	var shield_before := hero_shield
 	var damage := raw_damage * hero_stats.damage_taken_multiplier()
+	var notes := PackedStringArray()
+	if shield_before > 0.0 and equipment_inventory.has_set_bonus("iron_vow", 4):
+		damage *= 0.90
+	if iron_vow_guard_charges > 0 and iron_vow_guard_time > 0.0:
+		damage *= 0.75
+		iron_vow_guard_charges = 0
+		iron_vow_guard_time = 0.0
+		notes.append("铁誓减伤25%")
 	var absorbed := minf(hero_shield, damage)
 	hero_shield -= absorbed
 	damage -= absorbed
-	var notes := PackedStringArray()
 	if absorbed > 0.0:
 		notes.append("护盾吸收 %.0f" % absorbed)
 		if barrier_refund_pending > 0.0:
@@ -389,6 +422,13 @@ func _take_hero_damage(raw_damage: float, source_name: String) -> void:
 				immovable_counter_stored + gained_counter,
 			)
 			notes.append("储存 %.0f 反击伤害" % gained_counter)
+	if shield_before > 0.0 and hero_shield <= 0.0 \
+	and equipment_inventory.has_set_bonus("iron_vow", 5) and iron_vow_cooldown <= 0.0:
+		iron_vow_guard_charges = 1
+		iron_vow_guard_time = 4.0
+		iron_vow_cooldown = 12.0
+		hero_resource = minf(FuryRules.MAX_RAGE, hero_resource + 15.0)
+		notes.append("铁誓触发：获得15怒意并准备一次25%减伤")
 	hero_health = maxf(0.0, hero_health - damage)
 	battle_event.text = "%s 造成 %.0f 伤害" % [source_name, damage]
 	if not notes.is_empty():
@@ -422,11 +462,13 @@ func _refresh_combat_ui() -> void:
 	if battle_view != null:
 		battle_view.sync_shield(hero_shield)
 	if run_summary != null:
-		run_summary.text += "\n装备 G%.2f · 背包 %d · 金币 %d" % [
+		run_summary.text += "\n装备 G%.2f · 背包 %d · 金币 %d · 徽记 %d" % [
 			hero_stats.gear_tier,
 			equipment_inventory.inventory.size(),
 			player_wallet.gold,
+			player_wallet.rift_tokens,
 		]
+		run_summary.text += "\n掉落：%s" % EquipmentInventoryModel.Rules.floor_drop_preview(current_floor)
 
 
 func _spender_counter_damage(_skill_id: String) -> float:
@@ -473,16 +515,51 @@ func _burst_spender_refund(
 	)
 
 
-func _bleed_damage_multiplier() -> float:
-	return FuryRules.bleed_talent_damage_multiplier(
-		is_talent_enabled(FuryRules.CARVED_WOUNDS_TALENT_ID),
-	)
 
 
 func _dot_heal_conversion_ratio() -> float:
 	return FuryRules.dot_heal_conversion_ratio(
 		is_talent_enabled(FuryRules.BLOOD_MEMORY_TALENT_ID),
 	)
+
+func _rage_gain_multiplier() -> float:
+	return 1.10 if equipment_inventory.has_set_bonus("frenzy_tide", 2) else 1.0
+
+func _bleed_critical_chance() -> float:
+	if not equipment_inventory.has_set_bonus("blood_mark", 4):
+		return 0.0
+	return hero_stats.critical_chance() * 0.50
+
+func _bleed_critical_multiplier() -> float:
+	return 1.50 if equipment_inventory.has_set_bonus("blood_mark", 4) else 1.0
+
+func _spender_bleed_echo_damage(skill_id: String) -> float:
+	if skill_id not in ["single_spender", "aoe_spender"]:
+		return 0.0
+	if bleed_ticks_remaining <= 0 or not equipment_inventory.has_set_bonus("blood_mark", 5):
+		return 0.0
+	return bleed_tick_damage * 1.25
+
+func _on_burst_charge_consumed(remaining_charges: int) -> void:
+	if remaining_charges != 0 or not equipment_inventory.has_set_bonus("frenzy_tide", 5):
+		return
+	hero_resource = minf(FuryRules.MAX_RAGE, hero_resource + 20.0)
+	skill_cooldowns["fury_burst"] = maxf(
+		0.0,
+		float(skill_cooldowns.get("fury_burst", 0.0)) - 4.0,
+	)
+
+func _barrier_amount_multiplier() -> float:
+	return 1.12 if equipment_inventory.has_set_bonus("iron_vow", 2) else 1.0
+
+func _bleed_damage_multiplier() -> float:
+	var multiplier := FuryRules.bleed_talent_damage_multiplier(
+		is_talent_enabled(FuryRules.CARVED_WOUNDS_TALENT_ID),
+	)
+	if equipment_inventory.has_set_bonus("blood_mark", 2):
+		multiplier *= 1.10
+	return multiplier
+
 
 
 func _dot_heal_cap_ratio() -> float:

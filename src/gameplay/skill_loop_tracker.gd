@@ -8,6 +8,7 @@ var progress := 0
 var completed_loops := 0
 var broken_loops := 0
 var last_break_reason := ""
+var direction := 1
 
 
 func reset() -> void:
@@ -15,6 +16,13 @@ func reset() -> void:
 	completed_loops = 0
 	broken_loops = 0
 	last_break_reason = ""
+
+func set_direction(value: int) -> void:
+	direction = -1 if value < 0 else 1
+	progress = 0
+	last_break_reason = ""
+
+
 
 
 func record_cast(slot_index: int, skipped_count: int) -> Dictionary:
@@ -28,7 +36,8 @@ func record_cast(slot_index: int, skipped_count: int) -> Dictionary:
 		return _break_loop("invalid_slot")
 	if skipped_count > 0:
 		return _break_loop("skipped_skill")
-	if slot_index != progress:
+	var expected_slot := progress if direction > 0 else SLOT_COUNT - 1 - progress
+	if slot_index != expected_slot:
 		return _break_loop("out_of_order")
 
 	progress += 1
@@ -50,6 +59,7 @@ func snapshot() -> Dictionary:
 		"completed_loops": completed_loops,
 		"broken_loops": broken_loops,
 		"last_break_reason": last_break_reason,
+		"direction": direction,
 	}
 
 

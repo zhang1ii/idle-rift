@@ -4,6 +4,8 @@ extends SceneTree
 const Progression = preload("res://src/gameplay/progression_model.gd")
 const Rules = preload("res://src/gameplay/equipment_rules.gd")
 const Inventory = preload("res://src/gameplay/equipment_inventory.gd")
+const LoopInventory = preload("res://src/gameplay/loop_equipment_inventory.gd")
+const Effects = preload("res://src/gameplay/legendary_loop_effects.gd")
 
 
 func _init() -> void:
@@ -43,23 +45,43 @@ func _init() -> void:
 	var sale_value := inventory.sell_inventory_item(inventory.inventory.size() - 1)
 	assert(sale_value > 0)
 	assert(inventory.gold == gold_before + sale_value)
+	assert(Rules.SET_DEFINITIONS.size() == 3)
+	assert("倾向" in Rules.floor_drop_preview(2))
+	assert("三套职业套装" in Rules.floor_drop_preview(5))
+
+	var loop_inventory = LoopInventory.new()
+	loop_inventory.rng.seed = 41
+	var effect_item := Rules.create_normal_item(
+		loop_inventory.rng, 5, Effects.effect_slot(Effects.LONE_CORE), "legendary")
+	effect_item.special_effect = Effects.LONE_CORE
+	effect_item.effect_power = 1.0
+	loop_inventory.add_item(effect_item)
+	assert(Effects.LONE_CORE in loop_inventory.discovered_effect_ids)
+	assert(loop_inventory.recycle_inventory_item(0) == 5)
+	loop_inventory.wallet.deposit_tokens(7)
+	var exchanged: Dictionary = loop_inventory.exchange_weakened_effect(Effects.LONE_CORE, 6)
+	assert(not exchanged.is_empty())
+	assert(exchanged.quality == "epic")
+	assert(is_equal_approx(float(exchanged.effect_power), 0.70))
+	assert(loop_inventory.rift_tokens == 0)
+
 
 	var loadout := {}
 	for index in range(5):
 		var slot: String = Rules.ARMOR_SLOTS[index]
-		loadout[slot] = Rules.create_set_item(rng, 6, "bloodrage", slot)
+		loadout[slot] = Rules.create_set_item(rng, 6, "blood_mark", slot)
 	for index in range(5, 7):
 		var slot: String = Rules.ARMOR_SLOTS[index]
 		loadout[slot] = Rules.create_set_item(rng, 6, "iron_vow", slot)
 	var bonuses := Rules.active_set_bonuses(loadout)
 	assert(bonuses.size() == 4)
-	assert(_has_bonus(bonuses, "bloodrage", 2))
-	assert(_has_bonus(bonuses, "bloodrage", 4))
-	assert(_has_bonus(bonuses, "bloodrage", 5))
+	assert(_has_bonus(bonuses, "blood_mark", 2))
+	assert(_has_bonus(bonuses, "blood_mark", 4))
+	assert(_has_bonus(bonuses, "blood_mark", 5))
 	assert(_has_bonus(bonuses, "iron_vow", 2))
-	var five_piece := _find_bonus(bonuses, "bloodrage", 5)
+	var five_piece := _find_bonus(bonuses, "blood_mark", 5)
 	assert(is_equal_approx(five_piece.power, Rules.SET_POWER))
-	print("Equipment tests passed: 13 slots, qualities, backpack sales, drop-only items, and 2/4/5 sets.")
+	print("Equipment tests passed: three sets, floor tendencies, token recycling and weakened exchanges.")
 	quit()
 
 

@@ -3,6 +3,7 @@ extends SceneTree
 
 const Effects = preload("res://src/gameplay/legendary_loop_effects.gd")
 const FuryRules = preload("res://src/gameplay/fury_rules.gd")
+const EquipmentRules = preload("res://src/gameplay/equipment_rules.gd")
 const MainScene = preload("res://src/main/combat_prototype.tscn")
 
 
@@ -101,7 +102,48 @@ func _run_tests() -> void:
 	assert(game.loop_tracker.broken_loops == 1)
 	assert("熔接" in game.battle_event.text)
 
-	print("Rule legendary tests passed: scarcity, sourceless spenders, fusion and guarded counterplay.")
+	game._return_to_preparation("套装测试")
+	for index in range(5):
+		var slot: String = EquipmentRules.ARMOR_SLOTS[index]
+		game.equipment_inventory.equipped[slot] = EquipmentRules.create_set_item(
+			game.equipment_inventory.rng, 6, "blood_mark", slot)
+	assert(is_equal_approx(game._bleed_damage_multiplier(), 1.10))
+	assert(is_equal_approx(game._bleed_critical_multiplier(), 1.50))
+	game.bleed_ticks_remaining = 2
+	game.bleed_tick_damage = 40.0
+	assert(is_equal_approx(game._spender_bleed_echo_damage("single_spender"), 50.0))
+
+	for index in range(5):
+		var slot: String = EquipmentRules.ARMOR_SLOTS[index]
+		game.equipment_inventory.equipped[slot] = EquipmentRules.create_set_item(
+			game.equipment_inventory.rng, 6, "frenzy_tide", slot)
+	assert(is_equal_approx(game._rage_gain_multiplier(), 1.10))
+	game.hero_resource = 0.0
+	game.skill_cooldowns["fury_burst"] = 8.0
+	game._on_burst_charge_consumed(0)
+	assert(is_equal_approx(game.hero_resource, 20.0))
+	assert(is_equal_approx(game.skill_cooldowns["fury_burst"], 4.0))
+
+	for index in range(5):
+		var slot: String = EquipmentRules.ARMOR_SLOTS[index]
+		game.equipment_inventory.equipped[slot] = EquipmentRules.create_set_item(
+			game.equipment_inventory.rng, 6, "iron_vow", slot)
+	assert(is_equal_approx(game._barrier_amount_multiplier(), 1.12))
+
+
+	game.current_floor = 10
+	game._start_battle()
+	game._apply_reverse_loop()
+	assert(game.skill_cursor == 4)
+	assert(game.skill_scan_direction == -1)
+	for slot_index in [4, 3, 2, 1, 0]:
+		game.loop_tracker.record_cast(slot_index, 0)
+		game._after_successful_cycle_cast()
+	assert(game.loop_tracker.completed_loops == 1)
+	assert(game.skill_scan_direction == 1)
+	assert(game.skill_cursor == 0)
+
+	print("Rule tests passed: legendaries, three sets and floor-10 reverse loop.")
 	quit()
 
 

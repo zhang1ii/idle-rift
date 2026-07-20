@@ -5,6 +5,7 @@ extends Control
 signal equip_requested(inventory_index: int)
 signal sell_requested(inventory_index: int)
 signal sell_non_upgrades_requested
+signal recycle_requested(inventory_index: int)
 signal close_requested
 
 const Rules = preload("res://src/gameplay/equipment_rules.gd")
@@ -35,6 +36,7 @@ var _inventory_list: VBoxContainer
 var _detail_label: Label
 var _equip_button: Button
 var _sell_button: Button
+var _recycle_button: Button
 var _cleanup_button: Button
 var _equipped_buttons: Dictionary = {}
 var _inventory_buttons: Array[Button] = []
@@ -55,8 +57,8 @@ func refresh() -> void:
 	if model == null or _summary_label == null:
 		return
 	_selected_inventory_index = mini(_selected_inventory_index, model.inventory.size() - 1)
-	_summary_label.text = "已穿戴 %d / 13    背包 %d    金币 %d" % [
-		model.equipped.size(), model.inventory.size(), model.gold,
+	_summary_label.text = "已穿戴 %d/13  背包 %d  金币 %d  徽记 %d" % [
+		model.equipped.size(), model.inventory.size(), model.gold, model.rift_tokens,
 	]
 	_lock_label.text = "战斗中只读" if locked else "战前可管理"
 	_lock_label.modulate = Color("df7b67") if locked else Color("79c8a0")
@@ -171,6 +173,9 @@ func _build_inventory_section() -> Control:
 	_sell_button.pressed.connect(_request_sell)
 	actions.add_child(_sell_button)
 	_cleanup_button = _button("出售非提升", 76, 23)
+	_recycle_button = _button("分解", 64, 23)
+	_recycle_button.pressed.connect(_request_recycle)
+	actions.add_child(_recycle_button)
 	_cleanup_button.pressed.connect(sell_non_upgrades_requested.emit)
 	actions.add_child(_cleanup_button)
 	return panel
@@ -267,6 +272,11 @@ func _refresh_action_buttons() -> void:
 		model.inventory[_selected_inventory_index]
 	) if has_selection else "出售"
 	_cleanup_button.disabled = locked or model.inventory.is_empty()
+	var recyclable := has_selection and model.can_recycle(model.inventory[_selected_inventory_index])
+	_recycle_button.disabled = locked or not recyclable
+	_recycle_button.text = "分解 +%d" % model.recycle_value(
+		model.inventory[_selected_inventory_index]
+	) if recyclable else "分解"
 
 
 func _request_equip() -> void:
@@ -277,6 +287,11 @@ func _request_equip() -> void:
 func _request_sell() -> void:
 	if not locked and _selected_inventory_index >= 0:
 		sell_requested.emit(_selected_inventory_index)
+
+
+func _request_recycle() -> void:
+	if not locked and _selected_inventory_index >= 0:
+		recycle_requested.emit(_selected_inventory_index)
 
 
 func _item_detail(item: Dictionary) -> String:

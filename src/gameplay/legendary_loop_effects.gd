@@ -122,3 +122,4 @@ static func assign_loop_effect(item: Dictionary, rng: RandomNumberGenerator) -> 
 		RIFT_FUSER,
 	]
 	item["special_effect"] = pool[rng.randi_range(0, pool.size() - 1)]
+	item["effect_power"] = 1.0
