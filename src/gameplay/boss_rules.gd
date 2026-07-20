@@ -3,6 +3,7 @@ extends RefCounted
 
 const PLATFORM_COUNT := 5
 const ABILITY_INTERVAL := 4.0
+const FLOOR_TEN_ABILITY_INTERVAL := 2.75
 const SLOW_PER_BROKEN_PLATFORM := 0.12
 const INTIMIDATION_DAMAGE_PENALTY := 0.30
 const INTIMIDATION_ACTIONS := 3
@@ -29,6 +30,12 @@ static func ability_cycle(floor_number: int) -> Array[String]:
 	if floor_number == 10:
 		return FLOOR_TEN_ABILITY_CYCLE
 	return ABILITY_CYCLE
+
+
+static func ability_interval(floor_number: int) -> float:
+	if floor_number == 10:
+		return FLOOR_TEN_ABILITY_INTERVAL
+	return ABILITY_INTERVAL
 
 
 static func ability_name(ability_id: String) -> String:

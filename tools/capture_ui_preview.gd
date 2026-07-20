@@ -16,6 +16,7 @@ func _capture_previews() -> void:
 	root.add_child(game)
 	await _settle_frames()
 	_save_viewport("preparation.png")
+	game._grant_all_prototype_effects_for_testing()
 
 	game._toggle_equipment_panel()
 	var lone_index := _find_effect_index(game, Effects.LONE_CORE)

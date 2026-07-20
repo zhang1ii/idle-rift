@@ -16,6 +16,7 @@ func _run_tests() -> void:
 	var game = MainScene.instantiate()
 	root.add_child(game)
 	await process_frame
+	game._grant_all_prototype_effects_for_testing()
 
 	assert(game.initial_prototype_item_count == Effects.all_ids().size())
 	assert(game.equipment_inventory.inventory.size() == Effects.all_ids().size())

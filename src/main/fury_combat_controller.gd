@@ -17,7 +17,7 @@ var boss_guard_charges := 0
 var platforms_remaining := BossRules.PLATFORM_COUNT
 var floor_slow_stacks := 0
 var boss_ability_cursor := 0
-var boss_ability_timer := BossRules.ABILITY_INTERVAL
+var boss_ability_timer := BossRules.ability_interval(1)
 
 
 func _ready() -> void:
@@ -58,7 +58,7 @@ func _process(delta: float) -> void:
 		boss_ability_timer -= delta
 		if boss_ability_timer <= 0.0:
 			_cast_next_boss_ability()
-			boss_ability_timer = BossRules.ABILITY_INTERVAL
+			boss_ability_timer = BossRules.ability_interval(current_floor)
 	else:
 		enemy_action_timer -= delta
 		if enemy_action_timer <= 0.0:
@@ -76,7 +76,7 @@ func _start_battle() -> void:
 	platforms_remaining = BossRules.PLATFORM_COUNT
 	floor_slow_stacks = 0
 	boss_ability_cursor = 0
-	boss_ability_timer = BossRules.ABILITY_INTERVAL
+	boss_ability_timer = BossRules.ability_interval(current_floor)
 	super._start_battle()
 
 
@@ -86,7 +86,7 @@ func _spawn_enemy() -> void:
 	boss_guard_charges = 0
 	if Rules.is_boss_floor(current_floor):
 		boss_ability_cursor = 0
-		boss_ability_timer = BossRules.ABILITY_INTERVAL
+		boss_ability_timer = BossRules.ability_interval(current_floor)
 
 
 func _hero_take_action() -> void:
@@ -383,7 +383,7 @@ func _cast_next_boss_ability() -> void:
 			intimidation_actions = BossRules.INTIMIDATION_ACTIONS
 			battle_event.text = "Boss 发出恫吓：接下来 3 个攻击技能伤害降低。"
 		"heavy_attack":
-			_take_hero_damage(BossRules.HEAVY_ATTACK_DAMAGE, "Boss 的势大力沉")
+			_take_hero_damage(enemy_damage, "Boss 的势大力沉")
 		"defense":
 			boss_guard_charges = 1
 			battle_event.text = "Boss 硬化外骨骼：下一次受到的伤害降低 70%。"

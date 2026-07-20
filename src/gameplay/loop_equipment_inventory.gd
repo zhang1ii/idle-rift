@@ -7,12 +7,17 @@ const WEAK_EFFECT_POWER := 0.70
 const WEAK_EFFECT_TOKEN_COST := 12
 
 var discovered_effect_ids: Array[String] = []
+var special_effects_unlocked := false
 
 
 
 func add_item(source_item: Dictionary) -> Dictionary:
 	var normalized := source_item.duplicate(true)
-	Effects.assign_loop_effect(normalized, rng)
+	if special_effects_unlocked:
+		Effects.assign_loop_effect(normalized, rng)
+	else:
+		normalized["special_effect"] = ""
+		normalized["effect_power"] = 0.0
 	var effect_id := String(normalized.get("special_effect", ""))
 	if Effects.is_loop_effect(effect_id) and effect_id not in discovered_effect_ids:
 		discovered_effect_ids.append(effect_id)

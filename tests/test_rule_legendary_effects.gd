@@ -19,6 +19,7 @@ func _run_tests() -> void:
 	var game = MainScene.instantiate()
 	root.add_child(game)
 	await process_frame
+	game._grant_all_prototype_effects_for_testing()
 	assert(game.initial_prototype_item_count == 7)
 
 	assert(_equip_effect(game, Effects.LONE_CORE, "ring_1"))

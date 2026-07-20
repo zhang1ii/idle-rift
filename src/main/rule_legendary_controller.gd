@@ -12,9 +12,40 @@ var last_scarcity_unavailable := 0
 
 func _ready() -> void:
 	super._ready()
-	_grant_prototype_rule_items()
 	_refresh_all_ui()
 	print("Idle Rift rule-changing legendary experiment loaded.")
+
+
+func _on_boss_defeated() -> void:
+	var defeated_floor := current_floor
+	var first_clear := defeated_floor not in defeated_boss_floors
+	super._on_boss_defeated()
+	if first_clear and defeated_floor == 10:
+		_unlock_special_effect_system()
+
+
+func _unlock_special_effect_system() -> void:
+	if equipment_inventory.special_effects_unlocked:
+		return
+	equipment_inventory.special_effects_unlocked = true
+	var starter := EquipmentRulesScript.create_normal_item(
+		equipment_inventory.rng,
+		11,
+		LegendaryEffects.effect_slot(LegendaryEffects.RIFT_METRONOME),
+		"legendary",
+	)
+	starter["special_effect"] = LegendaryEffects.RIFT_METRONOME
+	starter["effect_power"] = 1.0
+	equipment_inventory.add_item(starter)
+	if equipment_panel != null:
+		equipment_panel.refresh()
+	battle_event.text += " · 已解锁特效装备，并获得【裂隙节拍器】。"
+
+
+func _grant_all_prototype_effects_for_testing() -> void:
+	equipment_inventory.special_effects_unlocked = true
+	_grant_prototype_loop_items()
+	_grant_prototype_rule_items()
 
 
 func _start_battle() -> void:

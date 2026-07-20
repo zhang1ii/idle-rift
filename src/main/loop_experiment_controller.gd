@@ -35,7 +35,6 @@ func _ready() -> void:
 	equipment_inventory = LoopEquipmentInventoryScript.new(player_wallet)
 	super._ready()
 	_replace_equipment_panel()
-	_grant_prototype_loop_items()
 	_refresh_all_ui()
 	print("Idle Rift five-slot loop experiment loaded.")
 

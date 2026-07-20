@@ -15,9 +15,12 @@ func _run_tests() -> void:
 	await process_frame
 	assert(game.talent_panel != null)
 	assert(game.talent_panel._talent_buttons.size() == 12)
+	assert(not game._talent_system_unlocked())
+	assert(not game.allocate_talent("carved_wounds"))
 	assert(not game.talent_panel.visible)
 	game._toggle_talent_panel()
-	assert(game.talent_panel.visible)
+	assert(not game.talent_panel.visible)
+	game.defeated_boss_floors.append(5)
 
 	var definition: Dictionary = Repository.new().talents()["trees"]["fury_warrior"]
 	game.talent_tree.configure(definition, 7)
@@ -42,6 +45,7 @@ func _run_tests() -> void:
 	assert(game.talent_tree.points_remaining() == 7)
 
 	game.talent_tree.configure(definition)
+	game.defeated_boss_floors.clear()
 	game.current_floor = 5
 	game._start_battle()
 	game._on_boss_defeated()

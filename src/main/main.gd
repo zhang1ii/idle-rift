@@ -10,6 +10,9 @@ const TalentTreePanelScript = preload("res://src/ui/talent_tree_panel.gd")
 const FunctionalBattleViewScene = preload("res://src/ui/functional_battle_view.tscn")
 const EquipmentInventoryPanelScript = preload("res://src/ui/equipment_inventory_panel.gd")
 
+const TALENT_UNLOCK_BOSS := 5
+const SPECIAL_EFFECT_UNLOCK_BOSS := 10
+
 var player_wallet = PlayerWalletModel.new()
 var equipment_inventory = EquipmentInventoryModel.new(player_wallet)
 var talent_tree = TalentTreeModelScript.new()
@@ -104,21 +107,21 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func allocate_talent(talent_id: String) -> bool:
-	if battle_state == BattleState.FIGHTING or not talent_tree.allocate(talent_id):
+	if not _talent_system_unlocked() or battle_state == BattleState.FIGHTING or not talent_tree.allocate(talent_id):
 		return false
 	_sync_active_talents_from_tree()
 	return true
 
 
 func refund_talent(talent_id: String) -> bool:
-	if battle_state == BattleState.FIGHTING or not talent_tree.refund(talent_id):
+	if not _talent_system_unlocked() or battle_state == BattleState.FIGHTING or not talent_tree.refund(talent_id):
 		return false
 	_sync_active_talents_from_tree()
 	return true
 
 
 func reset_talents() -> bool:
-	if battle_state == BattleState.FIGHTING or not talent_tree.reset():
+	if not _talent_system_unlocked() or battle_state == BattleState.FIGHTING or not talent_tree.reset():
 		return false
 	_sync_active_talents_from_tree()
 	return true
@@ -217,7 +220,11 @@ func _sync_active_talents_from_tree() -> void:
 
 
 func _toggle_talent_panel() -> void:
-	if talent_panel == null:
+	if talent_panel == null or battle_state == BattleState.FIGHTING:
+		return
+	if not _talent_system_unlocked():
+		battle_event.text = "击败第5层守关 Boss 后解锁天赋树。"
+		talent_panel.visible = false
 		return
 	talent_panel.visible = not talent_panel.visible
 	if talent_panel.visible:
@@ -310,12 +317,19 @@ func _on_boss_defeated() -> void:
 	var awarded := talent_tree.record_guard_boss_victory(defeated_floor) if first_clear else 0
 	super._on_boss_defeated()
 	talent_tree.end_battle()
+	if first_clear and defeated_floor == TALENT_UNLOCK_BOSS:
+		battle_event.text += " · 已解锁天赋树与套装构筑阶段。"
 	if awarded > 0:
 		battle_event.text += " · 获得 %d 点天赋（共 %d 点）" % [awarded, talent_tree.point_budget]
 	if talent_panel != null:
 		talent_panel.refresh()
 	if equipment_panel != null:
 		equipment_panel.set_locked(false)
+	_refresh_system_unlock_ui()
+
+
+func _talent_system_unlocked() -> bool:
+	return TALENT_UNLOCK_BOSS in defeated_boss_floors
 
 
 func _is_skill_available(skill_id: String, skill: Dictionary) -> bool:
@@ -469,6 +483,28 @@ func _refresh_combat_ui() -> void:
 			player_wallet.rift_tokens,
 		]
 		run_summary.text += "\n掉落：%s" % EquipmentInventoryModel.Rules.floor_drop_preview(current_floor)
+		run_summary.text += "\n阶段：%s" % _progression_stage_text()
+	_refresh_system_unlock_ui()
+
+
+func _progression_stage_text() -> String:
+	if not _talent_system_unlocked():
+		return "基础循环 · 第5层解锁天赋树与套装"
+	if SPECIAL_EFFECT_UNLOCK_BOSS not in defeated_boss_floors:
+		return "套装构筑 · 第10层解锁特效装备"
+	return "特效装备 · 组合普通效果与稀有规则效果"
+
+
+func _refresh_system_unlock_ui() -> void:
+	if talent_toggle_button == null:
+		return
+	var unlocked := _talent_system_unlocked()
+	if not unlocked and talent_panel != null:
+		talent_panel.visible = false
+	if unlocked:
+		talent_toggle_button.text = "天赋树 [Tab]"
+	else:
+		talent_toggle_button.text = "天赋树 [5层解锁]"
 
 
 func _spender_counter_damage(_skill_id: String) -> float:

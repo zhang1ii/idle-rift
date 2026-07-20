@@ -50,6 +50,7 @@ func _init() -> void:
 	assert("三套职业套装" in Rules.floor_drop_preview(5))
 
 	var loop_inventory = LoopInventory.new()
+	loop_inventory.special_effects_unlocked = true
 	loop_inventory.rng.seed = 41
 	var effect_item := Rules.create_normal_item(
 		loop_inventory.rng, 5, Effects.effect_slot(Effects.LONE_CORE), "legendary")
