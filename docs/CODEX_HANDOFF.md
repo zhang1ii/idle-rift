@@ -1,6 +1,6 @@
 # Idle Rift Codex 对话与开发交接
 
-- 更新日期：2026-07-20
+- 更新日期：2026-07-21
 - GitHub：`https://github.com/zhang1ii/idle-rift`
 - 开发分支：`zmj`
 - 引擎：Godot 4.7.1 stable
@@ -59,6 +59,7 @@
 - 第 10 层约 68.75 秒坠落校准；T6 构筑基本卡关，T7 强协同 5+2 达到 4/5 胜率。
 - 第 6–10 层 300 样本 farm：自适应刷 Boss 至输出 5+2 后转第 9 层，平均 52.8 分钟转场，保守准备率 52%。
 - 代表装备真实复核：血5狂2+刻骨裂痕 6/10，狂5血2+对应一点天赋 7/10；当前 35% 套装率无需提高。
+- 游戏内已显示阶段二刷层建议：未成型刷第 5 层 Boss，输出 5+2 成型后转第 9 层，第 10 层首杀后隐藏。
 - 三路线 12 节点天赋树。
 - 1280×720 实际渲染预览脚本。
 
@@ -66,7 +67,7 @@
 
 ## 5. 建议下一步
 
-1. 为 1～10 层补齐正式敌人、装备来源、套装成型转场提示和美术表现。
+1. 为 1～10 层补齐正式敌人、装备来源和美术表现。
 2. 接入存档、真实离线时间与结算界面。
 3. 设计第 11～15 层特效装备阶段和第 15 层新系统。
 
@@ -84,5 +85,5 @@ godot --path . --script res://tools/capture_ui_preview.gd
 
 先阅读 AGENTS.md、PRODUCT.md、DESIGN.md、docs/GDD.md、docs/SKILL_LOOP_SYSTEM.md、docs/TALENT_SYSTEM.md 和 docs/CODEX_HANDOFF.md，然后检查分支、状态和 Godot 版本并运行 tools/verify_windows.ps1。
 
-已确认规则不要擅自推翻。五层阶段路线见 docs/PROGRESSION_STAGES.md；当前优先建立第6–9层两小时farm模拟和代表天赋复核，再补1～10层正式内容、存档与离线结算。
+已确认规则不要擅自推翻。五层阶段路线和第6–10层校准见 docs/PROGRESSION_STAGES.md；当前优先补1～10层正式敌人与掉落内容，然后接入存档和离线结算。
 ```

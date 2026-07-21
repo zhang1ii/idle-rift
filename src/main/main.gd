@@ -130,12 +130,17 @@ func reset_talents() -> bool:
 func equip_inventory_item(index: int, requested_target := "") -> bool:
 	if battle_state == BattleState.FIGHTING:
 		return false
+	var offense_mix_was_ready := _offense_mixed_set_ready()
 	if not equipment_inventory.equip_inventory_item(index, requested_target):
 		return false
 	_apply_equipment_loadout(true)
 	if equipment_panel != null:
 		equipment_panel.refresh()
 	_refresh_all_ui()
+	if not offense_mix_was_ready \
+	and _offense_mixed_set_ready() \
+	and not _stage_two_farm_guidance().is_empty():
+		battle_event.text = "输出 5+2 套装已成型！建议转刷第 9 层补普通装备属性。"
 	return true
 
 
@@ -484,6 +489,9 @@ func _refresh_combat_ui() -> void:
 		]
 		run_summary.text += "\n掉落：%s" % EquipmentInventoryModel.Rules.floor_drop_preview(current_floor)
 		run_summary.text += "\n阶段：%s" % _progression_stage_text()
+		var farm_guidance := _stage_two_farm_guidance()
+		if not farm_guidance.is_empty():
+			run_summary.text += "\n构筑建议：%s" % farm_guidance
 	_refresh_system_unlock_ui()
 
 
@@ -505,6 +513,33 @@ func _refresh_system_unlock_ui() -> void:
 		talent_toggle_button.text = "天赋树 [Tab]"
 	else:
 		talent_toggle_button.text = "天赋树 [5层解锁]"
+
+func _offense_mixed_set_ready() -> bool:
+	return (
+		equipment_inventory.has_set_bonus("blood_mark", 5)
+		and equipment_inventory.has_set_bonus("frenzy_tide", 2)
+	) or (
+		equipment_inventory.has_set_bonus("frenzy_tide", 5)
+		and equipment_inventory.has_set_bonus("blood_mark", 2)
+	)
+
+
+func _has_any_five_piece_set() -> bool:
+	return (
+		equipment_inventory.has_set_bonus("blood_mark", 5)
+		or equipment_inventory.has_set_bonus("frenzy_tide", 5)
+		or equipment_inventory.has_set_bonus("iron_vow", 5)
+	)
+
+
+func _stage_two_farm_guidance() -> String:
+	if not _talent_system_unlocked() or SPECIAL_EFFECT_UNLOCK_BOSS in defeated_boss_floors:
+		return ""
+	if _offense_mixed_set_ready():
+		return "输出 5+2 已成型，建议转刷第 9 层补普通装备属性"
+	if _has_any_five_piece_set():
+		return "已有 5 件套，继续刷第 5 层 Boss 补齐输出 2 件套"
+	return "继续刷第 5 层 Boss，目标为血痕/狂潮输出 5+2"
 
 
 func _spender_counter_damage(_skill_id: String) -> float:

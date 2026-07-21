@@ -3,6 +3,7 @@ extends SceneTree
 
 const MainScene = preload("res://src/main/combat_prototype.tscn")
 const Effects = preload("res://src/gameplay/legendary_loop_effects.gd")
+const EquipmentRules = preload("res://src/gameplay/equipment_rules.gd")
 const OUTPUT_DIR := "C:/tmp/idle-rift-preview"
 
 
@@ -16,6 +17,9 @@ func _capture_previews() -> void:
 	root.add_child(game)
 	await _settle_frames()
 	_save_viewport("preparation.png")
+	_configure_stage_two_guidance(game)
+	await _settle_frames()
+	_save_viewport("stage_two_farm_guidance.png")
 	game._grant_all_prototype_effects_for_testing()
 
 	game._toggle_equipment_panel()
@@ -35,6 +39,20 @@ func _capture_previews() -> void:
 
 	print("UI previews captured at %s" % OUTPUT_DIR)
 	quit()
+
+
+func _configure_stage_two_guidance(game) -> void:
+	game.defeated_boss_floors.append(5)
+	for index in 5:
+		var slot: String = EquipmentRules.ARMOR_SLOTS[index]
+		game.equipment_inventory.equipped[slot] = EquipmentRules.create_set_item(
+			game.equipment_inventory.rng, 6, "blood_mark", slot)
+	for index in range(5, 7):
+		var slot: String = EquipmentRules.ARMOR_SLOTS[index]
+		game.equipment_inventory.equipped[slot] = EquipmentRules.create_set_item(
+			game.equipment_inventory.rng, 6, "frenzy_tide", slot)
+	game._apply_equipment_loadout(false)
+	game._refresh_all_ui()
 
 
 func _find_effect_index(game, effect_id: String) -> int:
