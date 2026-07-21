@@ -4,7 +4,6 @@ extends "res://src/main/fury_combat_controller.gd"
 const EquipmentInventoryModel = preload("res://src/gameplay/equipment_inventory.gd")
 const EquipmentEvaluator = preload("res://src/gameplay/equipment_evaluator.gd")
 const PlayerWalletModel = preload("res://src/gameplay/player_wallet.gd")
-const GameDataRepository = preload("res://src/data/game_data_repository.gd")
 const TalentTreeModelScript = preload("res://src/gameplay/talent_tree_model.gd")
 const TalentTreePanelScript = preload("res://src/ui/talent_tree_panel.gd")
 const FunctionalBattleViewScene = preload("res://src/ui/functional_battle_view.tscn")
@@ -31,7 +30,7 @@ var battle_view: FunctionalBattleView
 
 
 func _ready() -> void:
-	talent_tree.configure(GameDataRepository.new().talents()["trees"]["fury_warrior"])
+	talent_tree.configure(game_data.talents()["trees"]["fury_warrior"])
 	# The vertical slice starts with its calibrated G4 reference set. Unlike the
 	# old hard-coded character sheet, every displayed/combat stat is now rebuilt
 	# from these thirteen concrete items and will change when one is replaced.

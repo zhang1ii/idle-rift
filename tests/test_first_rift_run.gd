@@ -68,7 +68,25 @@ func _init() -> void:
 	assert(repeat_victory.talent_points_awarded == 0)
 	assert(repeat_victory.total_talent_points == 1)
 
+
+	for floor_number in range(6, 10):
+		assert(run.enter_floor(floor_number).floor == floor_number)
+		for ignored_kill in range(20):
+			run.record_enemy_defeated()
+	assert(run.highest_unlocked_floor == 10)
+	assert(run.floor_definition(10).is_boss)
+	var second_boss_entry := run.enter_floor(10)
+	assert(second_boss_entry.is_boss)
+	assert(second_boss_entry.restore_full_health)
+	assert(run.begin_encounter())
+	var second_boss_victory := run.record_boss_victory()
+	assert(second_boss_victory.first_clear)
+	assert(second_boss_victory.talent_points_awarded == 1)
+	assert(second_boss_victory.total_talent_points == 2)
+	assert(second_boss_victory.unlocked_floor == 11)
+	assert(run.highest_unlocked_floor == 11)
+
 	assert(is_equal_approx(run.healing_from_damage(100.0, 0.05), 5.0))
 	assert(is_equal_approx(run.healing_from_kill(200.0, 0.08), 16.0))
-	print("First Rift tests passed: clears, prebattle potions, boss talent point and death stop.")
+	print("First Rift tests passed: floors 1-10, potions, boss talent points and death stop.")
 	quit()

@@ -3,6 +3,7 @@ extends Control
 
 const Rules = preload("res://src/gameplay/combat_rules.gd")
 const CharacterStats = preload("res://src/gameplay/character_stats.gd")
+const GameDataRepository = preload("res://src/data/game_data_repository.gd")
 
 enum BattleState { PREPARING, FIGHTING }
 
@@ -32,6 +33,7 @@ var next_floor_button: Button
 var start_button: Button
 
 var hero_stats = CharacterStats.new()
+var game_data = GameDataRepository.new()
 var skill_catalog: Dictionary = Rules.skill_catalog()
 var skill_order: Array[String] = [
 	"resource_builder",
@@ -152,13 +154,26 @@ func _spawn_enemy() -> void:
 	bleed_ticks_remaining = 0
 	bleed_tick_timer = BLEED_TICK_INTERVAL
 	respawn_timer = -1.0
+	var definition := _current_floor_definition()
 	if Rules.is_boss_floor(current_floor):
-		enemy_name.text = "裂隙守卫 · 第 %d 层" % current_floor
+		var boss_name := String(definition.get("name", "裂隙守卫"))
+		enemy_name.text = "%s · 第 %d 层" % [boss_name, current_floor]
 	else:
-		var enemy_kinds := ["洞窟爬兽", "遗迹守卫", "裂隙游魂"]
+		var enemy_kinds: Array = definition.get(
+			"enemy_names",
+			["洞窟爬兽", "遗迹守卫", "裂隙游魂"],
+		)
 		enemy_name.text = "%s · Lv.%d" % [
 			enemy_kinds[(enemy_sequence - 1) % enemy_kinds.size()], current_floor]
 	_refresh_combat_ui()
+
+
+func _current_floor_definition() -> Dictionary:
+	return game_data.first_rift_floor(current_floor)
+
+
+func _current_floor_mechanic() -> String:
+	return String(_current_floor_definition().get("mechanic", "basic_attack"))
 
 
 func _hero_take_action() -> void:
@@ -327,7 +342,11 @@ func _tick_skill_cooldowns(delta: float) -> void:
 func _refresh_all_ui() -> void:
 	var boss_floor := Rules.is_boss_floor(current_floor)
 	floor_status.text = "力量系原型 · 第 %d 层" % current_floor
-	mode_status.text = "守关 BOSS" if boss_floor else "普通挂机层"
+	var definition := _current_floor_definition()
+	var mode_name := "守关 BOSS" if boss_floor else "普通挂机层"
+	var mechanic_label := String(definition.get("mechanic_label", ""))
+	mode_status.text = mode_name if mechanic_label.is_empty() \
+		else "%s · %s" % [mode_name, mechanic_label]
 	mode_status.modulate = Color("ffb45c") if boss_floor else Color("8fd7ff")
 	unlock_status.text = "已解锁 1–%d 层" % highest_unlocked_floor
 	selected_floor.text = "第 %d 层" % current_floor

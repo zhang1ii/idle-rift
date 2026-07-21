@@ -18,6 +18,9 @@ var platforms_remaining := BossRules.PLATFORM_COUNT
 var floor_slow_stacks := 0
 var boss_ability_cursor := 0
 var boss_ability_timer := BossRules.ability_interval(1)
+var normal_enemy_attack_count := 0
+var normal_enemy_wound_stacks := 0
+var normal_enemy_wound_timer := 0.0
 
 
 func _ready() -> void:
@@ -45,6 +48,9 @@ func _process(delta: float) -> void:
 			_spawn_enemy()
 		return
 
+	_process_normal_enemy_effects(delta)
+	if battle_state != BattleState.FIGHTING:
+		return
 	_process_fury_bleed(delta)
 	if enemy_health <= 0.0 or battle_state != BattleState.FIGHTING:
 		return
@@ -84,6 +90,9 @@ func _spawn_enemy() -> void:
 	super._spawn_enemy()
 	intimidation_actions = 0
 	boss_guard_charges = 0
+	normal_enemy_attack_count = 0
+	normal_enemy_wound_stacks = 0
+	normal_enemy_wound_timer = 0.0
 	if Rules.is_boss_floor(current_floor):
 		boss_ability_cursor = 0
 		boss_ability_timer = BossRules.ability_interval(current_floor)
@@ -209,10 +218,13 @@ func _cast_fury_skill(skill_id: String, skill: Dictionary, skipped_count: int) -
 			notes.append("不动如山反击 %.0f" % counter_damage)
 			_consume_spender_counter_damage(skill_id)
 	var actual_damage := _apply_damage_to_enemy(damage)
-	if boss_guard_charges == 0 and actual_damage < damage:
-		notes.append("外骨骼减伤")
+	if actual_damage < damage:
+		if _current_floor_mechanic() == "armor_and_reduction":
+			notes.append("厚甲减伤")
+		elif boss_guard_charges == 0:
+			notes.append("外骨骼减伤")
 	if bleed_echo_damage > 0.0 and enemy_health > 0.0:
-		var actual_echo := _apply_damage_to_enemy(bleed_echo_damage)
+		var actual_echo := _apply_damage_to_enemy(bleed_echo_damage, true)
 		actual_damage += actual_echo
 		notes.append("血痕战甲额外触发 %.0f 流血伤害" % actual_echo)
 
@@ -328,7 +340,7 @@ func _process_fury_bleed(delta: float) -> void:
 		damage *= _bleed_critical_multiplier()
 	if intimidation_actions > 0:
 		damage *= 1.0 - BossRules.INTIMIDATION_DAMAGE_PENALTY
-	var actual_damage := _apply_damage_to_enemy(damage)
+	var actual_damage := _apply_damage_to_enemy(damage, true)
 	dot_damage_bank += actual_damage
 	var leech_healing := actual_damage * _bleed_leech_ratio()
 	if leech_healing > 0.0:
@@ -340,8 +352,15 @@ func _process_fury_bleed(delta: float) -> void:
 	_resolve_enemy_defeat()
 
 
-func _apply_damage_to_enemy(damage: float) -> float:
+func _apply_damage_to_enemy(damage: float, ignores_floor_armor := false) -> float:
 	var actual_damage := damage
+	if _current_floor_mechanic() == "armor_and_reduction" and not ignores_floor_armor:
+		var definition := _current_floor_definition()
+		actual_damage *= 1.0 - clampf(
+			float(definition.get("armor_reduction", 0.0)),
+			0.0,
+			0.90,
+		)
 	if Rules.is_boss_floor(current_floor) and boss_guard_charges > 0:
 		actual_damage *= 1.0 - BossRules.CARAPACE_REDUCTION
 		boss_guard_charges -= 1
@@ -350,7 +369,52 @@ func _apply_damage_to_enemy(damage: float) -> float:
 
 
 func _enemy_take_action() -> void:
-	_take_hero_damage(enemy_damage, enemy_name.text)
+	normal_enemy_attack_count += 1
+	var definition := _current_floor_definition()
+	var raw_damage := enemy_damage
+	var source_name := enemy_name.text
+	if _current_floor_mechanic() == "telegraphed_heavy_attack" \
+	and normal_enemy_attack_count % maxi(1, int(definition.get("heavy_attack_every", 3))) == 0:
+		raw_damage *= maxf(1.0, float(definition.get("heavy_attack_multiplier", 2.0)))
+		source_name += " 的裂地重击"
+	_take_hero_damage(raw_damage, source_name)
+	if battle_state == BattleState.FIGHTING \
+	and _current_floor_mechanic() == "stacking_bleed":
+		var maximum_stacks := maxi(1, int(definition.get("maximum_stacks", 3)))
+		normal_enemy_wound_stacks = mini(maximum_stacks, normal_enemy_wound_stacks + 1)
+		normal_enemy_wound_timer = maxf(
+			0.1,
+			float(definition.get("bleed_tick_interval", 1.0)),
+		)
+		battle_event.text += " · 腐血 %d/%d 层" % [
+			normal_enemy_wound_stacks,
+			maximum_stacks,
+		]
+
+
+func _process_normal_enemy_effects(delta: float) -> void:
+	if _current_floor_mechanic() != "stacking_bleed" \
+	or normal_enemy_wound_stacks <= 0:
+		return
+	normal_enemy_wound_timer -= delta
+	if normal_enemy_wound_timer > 0.0:
+		return
+	var definition := _current_floor_definition()
+	normal_enemy_wound_timer += maxf(
+		0.1,
+		float(definition.get("bleed_tick_interval", 1.0)),
+	)
+	_take_hero_damage(
+		enemy_damage
+			* maxf(0.0, float(definition.get("bleed_damage_ratio", 0.0)))
+			* normal_enemy_wound_stacks,
+		"%s 的腐血" % enemy_name.text,
+	)
+
+
+func _normal_enemy_next_attack_is_heavy() -> bool:
+	var every := maxi(1, int(_current_floor_definition().get("heavy_attack_every", 3)))
+	return (normal_enemy_attack_count + 1) % every == 0
 
 
 func _take_hero_damage(raw_damage: float, source_name: String) -> void:
@@ -455,8 +519,21 @@ func _refresh_combat_ui() -> void:
 			platforms_remaining, BossRules.PLATFORM_COUNT,
 			BossRules.ability_name(next_ability), boss_ability_timer]
 	else:
-		enemy_action.text = "流血 %d 跳 · DOT 记录 %.0f" % [
-			bleed_ticks_remaining, dot_damage_bank]
+		match _current_floor_mechanic():
+			"stacking_bleed":
+				var maximum_stacks := int(_current_floor_definition().get("maximum_stacks", 3))
+				enemy_action.text = "腐血 %d/%d 层 · 我方流血 %d 跳" % [
+					normal_enemy_wound_stacks, maximum_stacks, bleed_ticks_remaining]
+			"armor_and_reduction":
+				var reduction := float(_current_floor_definition().get("armor_reduction", 0.0))
+				enemy_action.text = "厚甲减伤 %.0f%% · DOT 可穿透" % (reduction * 100.0)
+			"telegraphed_heavy_attack":
+				var next_attack := "裂地重击" if _normal_enemy_next_attack_is_heavy() \
+					else "普通攻击"
+				enemy_action.text = "下次：%s（%.1fs）" % [next_attack, enemy_action_timer]
+			_:
+				enemy_action.text = "流血 %d 跳 · DOT 记录 %.0f" % [
+					bleed_ticks_remaining, dot_damage_bank]
 	run_summary.text = (
 		"力量 %.0f  耐力 %.0f  精通 %.0f%%\n"
 		+ "急速 %.0f%%  暴击 %.0f%%  全能 %.0f%%\n"

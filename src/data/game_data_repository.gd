@@ -123,9 +123,20 @@ func _validate() -> void:
 	), "战斗掉率必须与第一裂隙合同一致。")
 	assert(float(rift["offline_efficiency"]) > 0.0, "离线效率必须大于 0。")
 	assert(float(rift["offline_efficiency"]) <= 1.0, "离线效率不能超过在线效率。")
-	assert(rift["floors"].size() >= 5, "第一裂隙至少需要 1～5 层定义。")
-	for floor_number in range(1, 6):
-		assert(not first_rift_floor(floor_number).is_empty(), "缺少第 %d 层定义。" % floor_number)
+	assert(rift["floors"].size() >= 10, "第一裂隙必须包含 1～10 层定义。")
+	for floor_number in range(1, 11):
+		var floor_definition := first_rift_floor(floor_number)
+		assert(not floor_definition.is_empty(), "缺少第 %d 层定义。" % floor_number)
+		assert(not String(floor_definition.get("mechanic_label", "")).is_empty(),
+			"第 %d 层缺少玩家可见机制名称。" % floor_number)
+		assert(not String(floor_definition.get("tutorial", "")).is_empty(),
+			"第 %d 层缺少教学目标。" % floor_number)
+		var should_be_boss := floor_number % 5 == 0
+		assert(bool(floor_definition.get("is_boss", false)) == should_be_boss,
+			"第 %d 层的 Boss 标记不正确。" % floor_number)
+		if not should_be_boss:
+			assert(not (floor_definition.get("enemy_names", []) as Array).is_empty(),
+				"第 %d 层缺少普通敌人轮换。" % floor_number)
 
 	var loadout: Dictionary = rift["skill_loadout"]
 	assert(int(loadout["equipped_slots"]) == 5, "出战技能槽必须固定为 5。")

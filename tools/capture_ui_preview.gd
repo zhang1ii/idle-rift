@@ -17,6 +17,13 @@ func _capture_previews() -> void:
 	root.add_child(game)
 	await _settle_frames()
 	_save_viewport("preparation.png")
+	game.current_floor = 4
+	game._start_battle()
+	game.normal_enemy_attack_count = 2
+	game._refresh_all_ui()
+	await _settle_frames()
+	_save_viewport("floor_four_heavy_warning.png")
+	game._return_to_preparation("预警重击界面预览完成。")
 	_configure_stage_two_guidance(game)
 	await _settle_frames()
 	_save_viewport("stage_two_farm_guidance.png")
@@ -43,6 +50,8 @@ func _capture_previews() -> void:
 
 func _configure_stage_two_guidance(game) -> void:
 	game.defeated_boss_floors.append(5)
+	game.highest_unlocked_floor = 10
+	game.current_floor = 9
 	for index in 5:
 		var slot: String = EquipmentRules.ARMOR_SLOTS[index]
 		game.equipment_inventory.equipped[slot] = EquipmentRules.create_set_item(

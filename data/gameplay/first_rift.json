@@ -42,10 +42,103 @@
     "clear_temporary_effects": true
   },
   "floors": [
-    {"floor": 1, "id": "rift_beast", "name": "裂隙野兽", "mechanic": "basic_attack", "tutorial": "基础攻击与技能循环"},
-    {"floor": 2, "id": "blood_hound", "name": "腐血猎犬", "mechanic": "stacking_bleed", "maximum_stacks": 3, "tutorial": "持续战损与恢复"},
-    {"floor": 3, "id": "ash_guard", "name": "灰甲守卫", "mechanic": "armor_and_reduction", "tutorial": "易伤、DOT与高倍率技能"},
-    {"floor": 4, "id": "groundbreaker", "name": "裂地蛮兽", "mechanic": "telegraphed_heavy_attack", "tutorial": "用纯技能顺序安排防御"},
-    {"floor": 5, "id": "rift_warden", "name": "裂隙守卫", "mechanic": "boss_timeline", "is_boss": true, "target_kill_seconds": 48.0, "hard_enrage_seconds": 68.0, "tutorial": "综合Build检查"}
+    {
+      "floor": 1,
+      "id": "rift_beast_den",
+      "name": "裂隙兽巢",
+      "enemy_names": ["裂隙幼兽", "苔石爬兽", "渊口掠食者"],
+      "mechanic": "basic_attack",
+      "mechanic_label": "基础攻击",
+      "tutorial": "观察队列、怒意和完整回路"
+    },
+    {
+      "floor": 2,
+      "id": "blood_hound_run",
+      "name": "腐血猎场",
+      "enemy_names": ["腐血猎犬", "伤痕游魂", "脓血吸食者"],
+      "mechanic": "stacking_bleed",
+      "mechanic_label": "腐血叠层",
+      "maximum_stacks": 3,
+      "bleed_tick_interval": 1.0,
+      "bleed_damage_ratio": 0.12,
+      "tutorial": "理解持续战损、回复和战前药水"
+    },
+    {
+      "floor": 3,
+      "id": "ash_guard_post",
+      "name": "灰甲哨站",
+      "enemy_names": ["灰甲守卫", "烬壳卫兵", "墓门石像"],
+      "mechanic": "armor_and_reduction",
+      "mechanic_label": "厚甲减伤",
+      "armor_reduction": 0.25,
+      "tutorial": "用易伤、DOT和高倍率技能处理护甲"
+    },
+    {
+      "floor": 4,
+      "id": "groundbreaker_pit",
+      "name": "裂地斗坑",
+      "enemy_names": ["裂地蛮兽", "断柱斗士", "震岩巨爪"],
+      "mechanic": "telegraphed_heavy_attack",
+      "mechanic_label": "预警重击",
+      "heavy_attack_every": 3,
+      "heavy_attack_multiplier": 2.25,
+      "tutorial": "根据固定节奏安排怒意壁垒"
+    },
+    {
+      "floor": 5,
+      "id": "rift_warden_shatterstone",
+      "name": "裂隙守关者·碎岩",
+      "mechanic": "boss_timeline",
+      "mechanic_label": "地板裂化",
+      "is_boss": true,
+      "target_kill_seconds": 48.0,
+      "hard_enrage_seconds": 68.0,
+      "tutorial": "在无天赋状态完成首次综合 Build 检查"
+    },
+    {
+      "floor": 6,
+      "id": "forge_armory",
+      "name": "熄火军械库",
+      "enemy_names": ["铸炉猎兵", "锈刃看守", "重甲拾荒者"],
+      "mechanic": "weapon_and_heavy_armor_tendency",
+      "mechanic_label": "武器与重甲倾向",
+      "tutorial": "理解楼层定向 farm"
+    },
+    {
+      "floor": 7,
+      "id": "blood_mark_gallery",
+      "name": "血痕回廊",
+      "enemy_names": ["血痕缝兽", "裂伤祭兵", "渴血追迹者"],
+      "mechanic": "mastery_and_blood_tendency",
+      "mechanic_label": "精通与血痕倾向",
+      "tutorial": "为 DOT 构筑补齐高级属性"
+    },
+    {
+      "floor": 8,
+      "id": "oathstone_bastion",
+      "name": "誓石壁垒",
+      "enemy_names": ["守誓石卫", "沉碑护卫", "誓甲残像"],
+      "mechanic": "versatility_and_armor_tendency",
+      "mechanic_label": "全能与防具倾向",
+      "tutorial": "为守关 Boss 建立生存线"
+    },
+    {
+      "floor": 9,
+      "id": "timeshear_crossing",
+      "name": "时隙交界",
+      "enemy_names": ["时隙游猎者", "回响刃徒", "迅环幽影"],
+      "mechanic": "haste_and_jewelry_tendency",
+      "mechanic_label": "急速与首饰倾向",
+      "tutorial": "调整急速断点并补强套装循环"
+    },
+    {
+      "floor": 10,
+      "id": "reverse_warden_gearwheel",
+      "name": "逆序守关者·刻轮",
+      "mechanic": "reverse_loop_boss",
+      "mechanic_label": "逆序刻印",
+      "is_boss": true,
+      "tutorial": "在无特效装备状态下完成 5→1 反向回路"
+    }
   ]
 }
