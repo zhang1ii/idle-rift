@@ -282,6 +282,8 @@ func _apply_talent_stat_modifiers() -> void:
 
 func _start_battle() -> void:
 	_apply_talent_stat_modifiers()
+	if battle_view != null:
+		battle_view.reset_presentation()
 	barrier_refund_pending = 0.0
 	immovable_counter_stored = 0.0
 	talent_tree.begin_battle()
@@ -300,6 +302,8 @@ func _start_battle() -> void:
 func _return_to_preparation(message: String) -> void:
 	talent_tree.end_battle()
 	super._return_to_preparation(message)
+	if battle_view != null:
+		battle_view.reset_presentation()
 	if talent_panel != null:
 		talent_panel.refresh()
 	if equipment_panel != null:
@@ -308,6 +312,8 @@ func _return_to_preparation(message: String) -> void:
 
 func _collapse_all_platforms() -> void:
 	super._collapse_all_platforms()
+	if battle_view != null:
+		battle_view.reset_presentation()
 	talent_tree.end_battle()
 	if talent_panel != null:
 		talent_panel.refresh()
@@ -486,11 +492,16 @@ func _refresh_combat_ui() -> void:
 			player_wallet.gold,
 			player_wallet.rift_tokens,
 		]
-		run_summary.text += "\n掉落：%s" % EquipmentInventoryModel.Rules.floor_drop_preview(current_floor)
-		run_summary.text += "\n阶段：%s" % _progression_stage_text()
-		var farm_guidance := _stage_two_farm_guidance()
-		if not farm_guidance.is_empty():
-			run_summary.text += "\n构筑建议：%s" % farm_guidance
+		if battle_state != BattleState.FIGHTING:
+			var drop_preview := EquipmentInventoryModel.Rules.floor_drop_preview(current_floor)
+			if current_floor % 5 == 0:
+				drop_preview = "守关珍藏 · 套装/史诗散件"
+			run_summary.text += "\n掉落：%s" % drop_preview
+			var farm_guidance := _stage_two_farm_guidance()
+			if farm_guidance.is_empty():
+				run_summary.text += "\n阶段：%s" % _progression_stage_text()
+			else:
+				run_summary.text += "\n构筑建议：%s" % farm_guidance
 	_refresh_system_unlock_ui()
 
 
@@ -535,10 +546,10 @@ func _stage_two_farm_guidance() -> String:
 	if not _talent_system_unlocked() or SPECIAL_EFFECT_UNLOCK_BOSS in defeated_boss_floors:
 		return ""
 	if _offense_mixed_set_ready():
-		return "输出 5+2 已成型，建议转刷第 9 层补普通装备属性"
+		return "输出 5+2 成型 → 转刷第 9 层"
 	if _has_any_five_piece_set():
-		return "已有 5 件套，继续刷第 5 层 Boss 补齐输出 2 件套"
-	return "继续刷第 5 层 Boss，目标为血痕/狂潮输出 5+2"
+		return "已有 5 件套 → 补血痕/狂潮 2 件套"
+	return "刷第 5 层 Boss → 凑输出 5+2"
 
 
 func _spender_counter_damage(_skill_id: String) -> float:

@@ -5,6 +5,8 @@ var shield_alpha := 0.0
 var impact_alpha := 0.0
 var hero_position := Vector2.ZERO
 var impact_position := Vector2.ZERO
+var _impact_tween: Tween
+var _shield_tween: Tween
 
 
 func _process(_delta: float) -> void:
@@ -28,19 +30,35 @@ func _draw() -> void:
 
 
 func play_contact_sparks(position: Vector2, strong := false) -> void:
+	_kill_tween(_impact_tween)
 	impact_position = position
 	impact_alpha = 1.0
-	var tween := create_tween()
-	tween.tween_property(self, "impact_alpha", 0.0, 0.16 if strong else 0.11)
+	_impact_tween = create_tween()
+	_impact_tween.tween_property(self, "impact_alpha", 0.0, 0.14 if strong else 0.10)
 
 
 func show_shield() -> void:
+	_kill_tween(_shield_tween)
 	shield_alpha = 0.0
-	var tween := create_tween()
-	tween.tween_property(self, "shield_alpha", 1.0, 0.14)
-	tween.tween_property(self, "shield_alpha", 0.72, 0.18)
+	_shield_tween = create_tween()
+	_shield_tween.tween_property(self, "shield_alpha", 1.0, 0.12)
+	_shield_tween.tween_property(self, "shield_alpha", 0.72, 0.16)
 
 
 func break_shield() -> void:
-	var tween := create_tween()
-	tween.tween_property(self, "shield_alpha", 0.0, 0.18)
+	_kill_tween(_shield_tween)
+	_shield_tween = create_tween()
+	_shield_tween.tween_property(self, "shield_alpha", 0.0, 0.16)
+
+
+func reset_effects() -> void:
+	_kill_tween(_impact_tween)
+	_kill_tween(_shield_tween)
+	impact_alpha = 0.0
+	shield_alpha = 0.0
+	queue_redraw()
+
+
+func _kill_tween(tween: Tween) -> void:
+	if tween != null and tween.is_valid():
+		tween.kill()

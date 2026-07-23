@@ -48,6 +48,56 @@
       "pipeline_meta": "items/settlement/pipeline-meta.json",
       "prompt": "items/settlement/prompt-used.txt",
       "status": "approved_prototype"
+    },
+    {
+      "id": "fury_barbarian_idle",
+      "class_id": "fury_warrior",
+      "type": "player",
+      "action": "idle",
+      "cell_size": [96, 96],
+      "frames": 4,
+      "frame_duration_ms": 167,
+      "frame_pattern": "characters/fury_barbarian/idle/idle-%d.png",
+      "pipeline_meta": "characters/fury_barbarian/idle/pipeline-meta.json",
+      "prompt": "characters/fury_barbarian/idle/prompt-used.txt",
+      "status": "approved_prototype"
+    },
+    {
+      "id": "fury_barbarian_attack",
+      "class_id": "fury_warrior",
+      "type": "player",
+      "action": "attack",
+      "cell_size": [96, 96],
+      "frames": 6,
+      "frame_duration_ms": 63,
+      "frame_pattern": "characters/fury_barbarian/attack/attack-%d.png",
+      "pipeline_meta": "characters/fury_barbarian/attack/pipeline-meta.json",
+      "prompt": "characters/fury_barbarian/attack/prompt-used.txt",
+      "status": "approved_prototype"
+    },
+    {
+      "id": "rift_boar_idle",
+      "type": "creature",
+      "action": "idle",
+      "cell_size": [112, 112],
+      "frames": 4,
+      "frame_duration_ms": 167,
+      "frame_pattern": "enemies/rift_boar/idle/idle-%d.png",
+      "pipeline_meta": "enemies/rift_boar/idle/pipeline-meta.json",
+      "prompt": "enemies/rift_boar/idle/prompt-used.txt",
+      "status": "approved_prototype"
+    },
+    {
+      "id": "rift_boar_hurt",
+      "type": "creature",
+      "action": "hurt",
+      "cell_size": [112, 112],
+      "frames": 4,
+      "frame_duration_ms": 71,
+      "frame_pattern": "enemies/rift_boar/hurt/hurt-%d.png",
+      "pipeline_meta": "enemies/rift_boar/hurt/pipeline-meta.json",
+      "prompt": "enemies/rift_boar/hurt/prompt-used.txt",
+      "status": "approved_prototype"
     }
   ]
 }

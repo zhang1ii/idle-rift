@@ -381,9 +381,14 @@ func _refresh_combat_ui() -> void:
 	hero_resource_bar.max_value = Rules.MAX_RESOURCE
 	hero_resource_bar.value = hero_resource
 	hero_resource_text.text = "战意 %.0f / %.0f" % [hero_resource, Rules.MAX_RESOURCE]
-	enemy_health_bar.max_value = maxf(1.0, enemy_max_health)
-	enemy_health_bar.value = enemy_health
-	enemy_health_text.text = "生命 %.0f / %.0f" % [enemy_health, enemy_max_health]
+	if battle_state == BattleState.FIGHTING:
+		enemy_health_bar.max_value = maxf(1.0, enemy_max_health)
+		enemy_health_bar.value = enemy_health
+		enemy_health_text.text = "生命 %.0f / %.0f" % [enemy_health, enemy_max_health]
+	else:
+		enemy_health_bar.max_value = 1.0
+		enemy_health_bar.value = 0.0
+		enemy_health_text.text = "等待开战"
 	if battle_state == BattleState.FIGHTING:
 		hero_action.text = "出手间隔 %.2fs · 铁壁 %d" % [
 			hero_stats.adjusted_time(Rules.BASE_ACTION_INTERVAL), guard_charges]
@@ -432,8 +437,8 @@ func _build_header(parent: Control) -> void:
 	header.custom_minimum_size.y = 24
 	header.add_theme_constant_override("separation", 14)
 	parent.add_child(header)
-	var title := _label("IDLE RIFT", 20, Color("e8b852"))
-	title.custom_minimum_size.x = 130
+	var title := _label("IDLE RIFT · PLAYTEST", 15, Color("e8b852"))
+	title.custom_minimum_size.x = 158
 	header.add_child(title)
 	floor_status = _label("", 12)
 	header.add_child(floor_status)
@@ -569,7 +574,7 @@ func _build_control_panel(parent: Control) -> void:
 	var panel := _panel(Color("111318"), 1.0)
 	parent.add_child(panel)
 	var layout := _inset_vbox(panel)
-	run_summary = _label("", 9, Color("b3bfce"))
+	run_summary = _label("", 8, Color("b3bfce"))
 	run_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(run_summary)
 	var navigation := HBoxContainer.new()

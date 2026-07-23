@@ -10,7 +10,8 @@ config_version=5
 
 [application]
 
-config/name="Idle Rift"
+config/name="Idle Rift Playtest"
+config/version="0.1-playtest"
 run/main_scene="res://src/main/combat_prototype.tscn"
 config/features=PackedStringArray("4.7")
 
@@ -21,7 +22,7 @@ window/size/viewport_height=360
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
-window/size/borderless=true
+window/size/borderless=false
 
 [rendering]
 

@@ -17,6 +17,13 @@ func _capture_previews() -> void:
 	root.add_child(game)
 	await _settle_frames()
 	_save_viewport("preparation.png")
+	game.battle_view.play_skill("single_spender")
+	await create_timer(0.12).timeout
+	_save_viewport("playtest_attack_motion.png")
+	await create_timer(0.40).timeout
+	_save_viewport("playtest_attack_reset.png")
+	game.battle_view.reset_presentation()
+	await _settle_frames()
 	game.current_floor = 4
 	game._start_battle()
 	game.normal_enemy_attack_count = 2
